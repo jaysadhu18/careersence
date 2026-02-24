@@ -52,6 +52,27 @@
   --radius-2xl: 1.5rem;
 }
 
+/* ─── Dark-mode overrides ─── */
+.dark {
+  --color-primary-50: #0f1a2e;
+  --color-primary-100: #132952;
+  --color-primary-700: #93c5fd;
+
+  --color-secondary-50: #081c1c;
+  --color-secondary-100: #0c3c38;
+
+  --color-background: #030712;
+  --color-surface: #111827;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-border: #1e293b;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --shadow-soft: 0 2px 8px rgb(0 0 0 / 0.4);
+}
+
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -59,6 +80,13 @@
   --color-foreground: var(--color-text);
   --color-primary: var(--color-primary-600);
   --color-secondary: var(--color-secondary-600);
+}
+
+/* Smooth dark-mode transition for all elements */
+*,
+*::before,
+*::after {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, fill 0.4s ease, stroke 0.4s ease;
 }
 
 body {

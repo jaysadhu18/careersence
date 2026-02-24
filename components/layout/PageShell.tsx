@@ -9,11 +9,11 @@ interface PageShellProps {
 }
 
 const maxWidthClasses = {
-  sm: "max-w-3xl",
-  md: "max-w-4xl",
-  lg: "max-w-5xl",
-  xl: "max-w-6xl",
-  full: "max-w-7xl",
+  sm: "max-w-4xl",
+  md: "max-w-5xl",
+  lg: "max-w-6xl",
+  xl: "max-w-7xl",
+  full: "",
 };
 
 export function PageShell({
@@ -24,7 +24,7 @@ export function PageShell({
   maxWidth = "xl",
 }: PageShellProps) {
   return (
-    <div className="mx-auto w-full px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full px-6 py-10 sm:px-8 lg:px-12">
       <div
         className={`mx-auto ${maxWidthClasses[maxWidth]} ${
           sidebar ? "flex gap-8 lg:flex-row" : ""

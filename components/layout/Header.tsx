@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
@@ -29,7 +30,7 @@ export function Header() {
       className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]"
       role="banner"
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-6 sm:px-8 lg:px-12">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 text-lg font-semibold text-[var(--color-text)] no-underline"
@@ -60,6 +61,7 @@ export function Header() {
         )}
 
         <div className="flex items-center gap-2">
+          <DarkModeToggle />
           {!isAuthPage && (
             <>
               {isLoggedIn ? (
