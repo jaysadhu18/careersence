@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Careersence
 
-## Getting Started
+AI-powered career and education guidance platform for students and early-career professionals.
 
-First, run the development server:
+## Tech stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Tailwind CSS v4**
+- **PostgreSQL** (Prisma ORM) for user data
+- **NextAuth.js** (Credentials + JWT) for sign in / sign up
+
+## Project structure
+
+```
+careersence/
+├── app/
+│   ├── (auth)/           # Auth layout group
+│   │   ├── signin/
+│   │   └── signup/
+│   ├── ai-roadmap/
+│   ├── analyze/
+│   ├── api/              # Public API documentation (static page)
+│   ├── career-quiz/
+│   ├── career-tree/
+│   ├── college-finder/
+│   ├── dashboard/
+│   ├── job-hunting/
+│   ├── learning-resources/
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── layout/           # Header, Footer, PageShell, DashboardSidebar
+│   ├── ui/               # Button, Input, Select, Checkbox, Textarea, Card, Badge, Tabs, Modal, Toast, Accordion, Progress
+│   ├── domain/           # ResourceCard, RoadmapStepCard, JobCard, CollegeCard, QuizQuestionCard, ProgressHeader
+│   └── providers/        # ToastProvider
+└── lib/
+    ├── utils.ts          # formatDuration, formatDate, formatSalaryRange, cn
+    ├── mock-data.ts      # Sample roadmap, resources, jobs, colleges, quiz results
+    └── hooks/
+        ├── useRoadmap.ts
+        ├── useResources.ts
+        ├── useJobs.ts
+        └── useCollegeSearch.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Design system
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Primary:** Blue (`--color-primary-*`) for CTAs and highlights
+- **Secondary:** Teal (`--color-secondary-*`) for accents
+- **Surfaces:** White cards, off-white background, soft shadows and rounded corners
+- **Typography:** Inter (sans), Geist Mono (code)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Authentication & database
 
-## Learn More
+- **Guests** see only the **landing page** (`/`). Sign in and Sign up are in the header.
+- **After sign in or sign up**, users are redirected to the **main app** (e.g. Dashboard); all other routes require authentication.
+- User data (email, hashed password, name, role, interests) is stored in **PostgreSQL**.
 
-To learn more about Next.js, take a look at the following resources:
+### Setup PostgreSQL
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Install PostgreSQL and create a database (e.g. `careersence`).
+2. Copy `.env.local.example` to `.env.local` and set:
+   - `DATABASE_URL` — e.g. `postgresql://postgres:YOUR_PASSWORD@localhost:5432/careersence?schema=public`
+   - `NEXTAUTH_SECRET` — run `openssl rand -base64 32` and paste the result
+   - `NEXTAUTH_URL` — `http://localhost:3000` for local dev
+3. Run migrations:
+   ```bash
+   npx prisma migrate deploy
+   ```
+4. (Optional) Open Prisma Studio to view data: `npx prisma studio`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Run locally
 
-## Deploy on Vercel
+```bash
+npm install
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000). Sign up or sign in to access Dashboard, AI Roadmap, and the rest of the app.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Build
+
+```bash
+npm run build
+npm start
+```
+
+## Routes
+
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/signin` | Sign in form |
+| `/signup` | Sign up with role and interests |
+| `/dashboard` | Personalized dashboard with roadmap, quiz, resources, job snapshot |
+| `/career-quiz` | Multi-step quiz with results and “Add to roadmap” |
+| `/ai-roadmap` | Timeline of stages with status and action items |
+| `/learning-resources` | Filterable resource grid (course/article/video) |
+| `/job-hunting` | Saved roles, application tracker, AI assistance |
+| `/college-finder` | Search and shortlist colleges |
+| `/analyze` | Tabs: Resume, Job description, Career comparison |
+| `/api` | Public API documentation |
+| `/career-tree` | Placeholder for career exploration view |

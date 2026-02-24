@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String?
+  role      String?    // student, recent_graduate, career_switcher, other
+  interests String?    // JSON array of selected interests
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  roadmaps  Roadmap[]
+  savedJobs SavedJob[]
+}
+
+model Roadmap {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  careerGoal String
+  stages     String   // JSON array of stages
+  createdAt  DateTime @default(now())
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String   // external job ID from JSearch
+  title     String
+  company   String
+  location  String
+  url       String
+  source    String   @default("jsearch")
+  status    String   @default("saved") // saved | applied | interviewing | offer | rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, jobId])
+}
