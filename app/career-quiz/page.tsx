@@ -1,70 +1,180 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
 import { ProgressHeader } from "@/components/domain/ProgressHeader";
-import { QuizQuestionCard, type QuizOption } from "@/components/domain/QuizQuestionCard";
+import { QuizQuestionCard } from "@/components/domain/QuizQuestionCard";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { careerQuizResults } from "@/lib/mock-data";
 import { formatSalaryRange } from "@/lib/utils";
-
-const questions: { question: string; options: QuizOption[]; type: "single" | "likert" }[] = [
-  {
-    question: "I enjoy solving problems with logic and structure.",
-    type: "likert",
-    options: [
-      { value: "1", label: "1" },
-      { value: "2", label: "2" },
-      { value: "3", label: "3" },
-      { value: "4", label: "4" },
-      { value: "5", label: "5" },
-    ],
-  },
-  {
-    question: "Which type of work do you prefer?",
-    type: "single",
-    options: [
-      { value: "building", label: "Building products or systems" },
-      { value: "analyzing", label: "Analyzing data and trends" },
-      { value: "people", label: "Working with people and teams" },
-      { value: "creating", label: "Creating content or design" },
-    ],
-  },
-  {
-    question: "What matters most in a job?",
-    type: "single",
-    options: [
-      { value: "salary", label: "High salary and growth" },
-      { value: "impact", label: "Social impact" },
-      { value: "balance", label: "Work-life balance" },
-      { value: "learning", label: "Continuous learning" },
-    ],
-  },
-];
+import { useCareerQuiz } from "@/lib/hooks/useCareerQuiz";
 
 export default function CareerQuizPage() {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [completed, setCompleted] = useState(false);
+  const {
+    phase,
+    currentStep,
+    currentQuestion,
+    totalQuestions,
+    progress,
+    answers,
+    results,
+    error,
+    canProceed,
+    isLastQuestion,
+    submitAnswer,
+    goBack,
+    goNext,
+    retake,
+  } = useCareerQuiz();
 
-  const totalSteps = questions.length + 1;
-  const isResults = completed;
-  const currentQuestion = questions[step];
-  const progress = isResults ? 100 : ((step + 1) / totalSteps) * 100;
+  // ─── Loading states ──────────────────────────────────────────────────────
+  if (phase === "loading-phase2" || phase === "loading-results") {
+    return (
+      <PageShell
+        title="Career Quiz"
+        description="Answer a few questions to find careers that fit you."
+        maxWidth="lg"
+      >
+        <div className="flex flex-col items-center justify-center py-20">
+          {/* Spinner */}
+          <div className="relative mb-6">
+            <div className="h-16 w-16 animate-spin rounded-full border-4 border-[var(--color-primary-200)] border-t-[var(--color-primary-600)]" />
+          </div>
+          <h2 className="text-xl font-semibold text-[var(--color-text)]">
+            {phase === "loading-phase2"
+              ? "Generating personalised questions…"
+              : "Analysing your answers…"}
+          </h2>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+            {phase === "loading-phase2"
+              ? "Our AI is crafting 10 questions based on your interests."
+              : "Our AI is finding the best career matches for you."}
+          </p>
+          <ProgressHeader progress={100} title="" />
+        </div>
+      </PageShell>
+    );
+  }
 
-  const handleNext = () => {
-    if (step < questions.length - 1) setStep((s) => s + 1);
-    else setCompleted(true);
-  };
+  // ─── Error state ─────────────────────────────────────────────────────────
+  if (error) {
+    return (
+      <PageShell
+        title="Career Quiz"
+        description="Answer a few questions to find careers that fit you."
+        maxWidth="lg"
+      >
+        <Card padding="lg">
+          <div className="flex flex-col items-center py-8 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+              <svg
+                className="h-7 w-7 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--color-text)]">
+              Something went wrong
+            </h3>
+            <p className="mt-2 max-w-md text-sm text-[var(--color-text-muted)]">
+              {error}
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button variant="outline" onClick={retake}>
+                Start over
+              </Button>
+              <Button variant="primary" onClick={goNext}>
+                Retry
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </PageShell>
+    );
+  }
 
-  const handleBack = () => {
-    if (step > 0) setStep((s) => s - 1);
-  };
+  // ─── Results view ────────────────────────────────────────────────────────
+  if (phase === "results") {
+    return (
+      <PageShell
+        title="Career Quiz"
+        description="Answer a few questions to find careers that fit you."
+        maxWidth="lg"
+      >
+        <ProgressHeader
+          title="Your career matches"
+          description="Based on your answers, these careers are a strong fit. Explore and add them to your roadmap."
+        />
+        <div className="space-y-6">
+          {results.map((career) => (
+            <Card key={career.id} padding="lg">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold text-[var(--color-text)]">
+                      {career.title}
+                    </h3>
+                    <Badge variant="success" size="sm">
+                      {career.matchScore}% match
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                    {career.summary}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge variant="outline" size="sm">
+                      {formatSalaryRange(career.salaryMin, career.salaryMax)}
+                    </Badge>
+                    <Badge variant="outline" size="sm">
+                      {career.education}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                    Key skills: {career.skills.join(", ")}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="primary" size="sm">
+                    Add to roadmap
+                  </Button>
+                  <Link
+                    href="/learning-resources"
+                    className="inline-flex items-center justify-center rounded-lg border-2 border-[var(--color-primary-600)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)]"
+                  >
+                    Explore learning
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+        <div className="mt-8 flex justify-center gap-4">
+          <Button variant="outline" onClick={retake}>
+            Retake quiz
+          </Button>
+          <Link
+            href="/ai-roadmap"
+            className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+          >
+            View your roadmap
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
 
-  const canProceed = currentQuestion && answers[step] !== undefined;
+  // ─── Question view (Phase 1 & Phase 2) ────────────────────────────────
+  const phaseLabel =
+    phase === "phase1" ? "Basic Profile" : "Personalised Questions";
 
   return (
     <PageShell
@@ -72,101 +182,49 @@ export default function CareerQuizPage() {
       description="Answer a few questions to find careers that fit you."
       maxWidth="lg"
     >
-      {!isResults ? (
-        <>
-          <ProgressHeader
-            title={currentQuestion?.question ?? "Career Quiz"}
-            description="Be honest — there are no wrong answers."
-            progress={progress}
-            step={{
-              current: step + 1,
-              total: questions.length,
-              label: `Question ${step + 1}`,
-            }}
-          />
-          {currentQuestion && (
-            <QuizQuestionCard
-              question={currentQuestion.question}
-              options={currentQuestion.options}
-              type={currentQuestion.type}
-              value={answers[step]}
-              onChange={(v) => setAnswers((a) => ({ ...a, [step]: v }))}
-            />
-          )}
-          <div className="mt-8 flex justify-between">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={step === 0}
-            >
-              Back
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleNext}
-              disabled={!canProceed}
-            >
-              {step === questions.length - 1 ? "See results" : "Next"}
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          <ProgressHeader
-            title="Your career matches"
-            description="Based on your answers, these clusters are a strong fit. Explore and add them to your roadmap."
-          />
-          <div className="space-y-6">
-            {careerQuizResults.map((career) => (
-              <Card key={career.id} padding="lg">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-[var(--color-text)]">
-                      {career.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                      {career.summary}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge variant="outline" size="sm">
-                        {formatSalaryRange(career.salaryMin, career.salaryMax)}
-                      </Badge>
-                      <Badge variant="outline" size="sm">
-                        {career.education}
-                      </Badge>
-                    </div>
-                    <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                      Key skills: {career.skills.join(", ")}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="primary" size="sm">
-                      Add to roadmap
-                    </Button>
-                    <Link
-                      href="/learning-resources"
-                      className="inline-flex items-center justify-center rounded-lg border-2 border-[var(--color-primary-600)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)]"
-                    >
-                      Explore learning
-                    </Link>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-center gap-4">
-            <Button variant="outline" onClick={() => { setCompleted(false); setStep(0); setAnswers({}); }}>
-              Retake quiz
-            </Button>
-            <Link
-              href="/ai-roadmap"
-              className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
-            >
-              View your roadmap
-            </Link>
-          </div>
-        </>
+      <ProgressHeader
+        title={currentQuestion?.question ?? "Career Quiz"}
+        description={
+          phase === "phase1"
+            ? "Be honest — there are no wrong answers."
+            : "These questions are tailored to your interests."
+        }
+        progress={progress}
+        step={{
+          current: currentStep + 1,
+          total: totalQuestions,
+          label: `${phaseLabel} · Question ${currentStep + 1}`,
+        }}
+      />
+      {currentQuestion && (
+        <QuizQuestionCard
+          question={currentQuestion.question}
+          options={currentQuestion.options}
+          type={currentQuestion.type}
+          value={answers[currentStep]}
+          onChange={submitAnswer}
+        />
       )}
+      <div className="mt-8 flex justify-between">
+        <Button
+          variant="outline"
+          onClick={goBack}
+          disabled={currentStep === 0}
+        >
+          Back
+        </Button>
+        <Button
+          variant="primary"
+          onClick={goNext}
+          disabled={!canProceed}
+        >
+          {isLastQuestion
+            ? phase === "phase1"
+              ? "Generate personalised questions"
+              : "See results"
+            : "Next"}
+        </Button>
+      </div>
     </PageShell>
   );
 }

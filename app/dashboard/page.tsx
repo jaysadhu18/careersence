@@ -6,6 +6,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { RoadmapHistorySection } from "@/components/domain/RoadmapHistorySection";
+import { QuizHistorySection } from "@/components/domain/QuizHistorySection";
 import { prisma } from "@/lib/prisma";
 
 export default async function DashboardPage() {
@@ -45,6 +46,25 @@ export default async function DashboardPage() {
     }
   } catch {
     previousRoadmaps = [];
+  }
+
+  // Fetch quiz sessions from DB
+  let quizSessions: { id: string; phase1Answers: string; results: string | null; createdAt: string }[] = [];
+  try {
+    if (user?.id) {
+      const rows = await prisma.quizSession.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: { id: true, phase1Answers: true, results: true, createdAt: true },
+      });
+      quizSessions = rows.map((r: { id: string; phase1Answers: string; results: string | null; createdAt: Date }) => ({
+        ...r,
+        createdAt: r.createdAt.toISOString(),
+      }));
+    }
+  } catch {
+    quizSessions = [];
   }
 
   return (
@@ -94,6 +114,22 @@ export default async function DashboardPage() {
           <RoadmapHistorySection roadmaps={previousRoadmaps} />
         </section>
 
+        {/* Career Quiz History */}
+        <section className="space-y-4">
+          <CardHeader
+            title="Career Quiz History"
+            description="Your AI-powered career assessment results."
+            action={
+              <Link
+                href="/career-quiz"
+                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+              >
+                + Take quiz
+              </Link>
+            }
+          />
+          <QuizHistorySection quizzes={quizSessions} />
+        </section>
 
 
       </div>

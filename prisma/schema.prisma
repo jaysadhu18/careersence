@@ -16,8 +16,9 @@ model User {
   interests String?    // JSON array of selected interests
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  roadmaps  Roadmap[]
-  savedJobs SavedJob[]
+  roadmaps     Roadmap[]
+  savedJobs    SavedJob[]
+  quizSessions QuizSession[]
 }
 
 model Roadmap {
@@ -44,4 +45,16 @@ model SavedJob {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, jobId])
+}
+
+model QuizSession {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phase1Answers   String   // JSON: answers to the 5 basic questions
+  phase2Questions String?  // JSON: AI-generated follow-up questions
+  phase2Answers   String?  // JSON: answers to follow-up questions
+  results         String?  // JSON: AI-generated career recommendations
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
