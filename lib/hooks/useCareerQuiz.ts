@@ -106,6 +106,9 @@ export function useCareerQuiz() {
     const [results, setResults] = useState<CareerResult[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
+    const [roadmapLoading, setRoadmapLoading] = useState<Set<string>>(new Set());
+    const [roadmapAdded, setRoadmapAdded] = useState<Set<string>>(new Set());
+    const [roadmapError, setRoadmapError] = useState<Record<string, string>>({});
 
     // Current question based on phase
     const allQuestions = [...PHASE1_QUESTIONS, ...phase2Questions];
@@ -236,6 +239,42 @@ export function useCareerQuiz() {
         setCurrentStep((s) => s + 1);
     }, [phase, currentStep, answers, phase2Questions, allQuestions, sessionId]);
 
+    // Add a career result to the roadmap
+    const addToRoadmap = useCallback(async (career: CareerResult) => {
+        const id = career.id;
+        setRoadmapLoading((prev) => new Set(prev).add(id));
+        setRoadmapError((prev) => { const next = { ...prev }; delete next[id]; return next; });
+        try {
+            const res = await fetch("/api/roadmap", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    careerGoal: career.title,
+                    currentStage: `Transitioning into ${career.title}`,
+                    timeline: "6-12 months",
+                    experience: `Skills: ${career.skills.join(", ")}. Education: ${career.education}`,
+                    interests: career.summary,
+                }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error ?? "Failed to generate roadmap");
+            }
+            setRoadmapAdded((prev) => new Set(prev).add(id));
+        } catch (e) {
+            setRoadmapError((prev) => ({
+                ...prev,
+                [id]: e instanceof Error ? e.message : "Failed to add roadmap",
+            }));
+        } finally {
+            setRoadmapLoading((prev) => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
+        }
+    }, []);
+
     // Reset everything
     const retake = useCallback(() => {
         setPhase("phase1");
@@ -245,6 +284,9 @@ export function useCareerQuiz() {
         setResults([]);
         setError(null);
         setSessionId(null);
+        setRoadmapLoading(new Set());
+        setRoadmapAdded(new Set());
+        setRoadmapError({});
     }, []);
 
     const canProceed = answers[currentStep] !== undefined;
@@ -269,5 +311,9 @@ export function useCareerQuiz() {
         goBack,
         goNext,
         retake,
+        addToRoadmap,
+        roadmapLoading,
+        roadmapAdded,
+        roadmapError,
     };
 }

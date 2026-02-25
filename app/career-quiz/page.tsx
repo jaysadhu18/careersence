@@ -26,6 +26,10 @@ export default function CareerQuizPage() {
     goBack,
     goNext,
     retake,
+    addToRoadmap,
+    roadmapLoading,
+    roadmapAdded,
+    roadmapError,
   } = useCareerQuiz();
 
   // ─── Loading states ──────────────────────────────────────────────────────
@@ -142,16 +146,38 @@ export default function CareerQuizPage() {
                     Key skills: {career.skills.join(", ")}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="primary" size="sm">
-                    Add to roadmap
-                  </Button>
-                  <Link
-                    href="/learning-resources"
-                    className="inline-flex items-center justify-center rounded-lg border-2 border-[var(--color-primary-600)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)]"
-                  >
-                    Explore learning
-                  </Link>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {roadmapAdded.has(career.id) ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        Added to roadmap
+                      </span>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => addToRoadmap(career)}
+                        disabled={roadmapLoading.has(career.id)}
+                      >
+                        {roadmapLoading.has(career.id) ? (
+                          <span className="inline-flex items-center gap-2">
+                            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                            Generating…
+                          </span>
+                        ) : "Add to roadmap"}
+                      </Button>
+                    )}
+                    <Link
+                      href="/learning-resources"
+                      className="inline-flex items-center justify-center rounded-lg border-2 border-[var(--color-primary-600)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)]"
+                    >
+                      Explore learning
+                    </Link>
+                  </div>
+                  {roadmapError[career.id] && (
+                    <p className="text-xs text-red-500">{roadmapError[career.id]}</p>
+                  )}
                 </div>
               </div>
             </Card>
