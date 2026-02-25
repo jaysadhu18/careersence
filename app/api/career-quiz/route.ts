@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -167,9 +168,9 @@ async function callGroq(
 
 export async function POST(request: Request) {
     try {
-        const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
-        const userId = token?.id as string | undefined;
-        console.log("[career-quiz] token:", token ? { id: token.id, email: token.email } : "null");
+        // Get authenticated user via session
+        const session = await getServerSession(authOptions);
+        const userId = session?.user?.id;
         console.log("[career-quiz] userId:", userId ?? "NONE");
 
         const body = (await request.json()) as RequestBody;
@@ -203,8 +204,9 @@ export async function POST(request: Request) {
 
             // Save phase 1 to DB for logged-in users
             let sessionId: string | null = null;
-            try {
-                if (userId) {
+            if (userId) {
+                try {
+                    console.log("[career-quiz] Saving phase1 for userId:", userId);
                     const quiz = await prisma.quizSession.create({
                         data: {
                             userId,
@@ -213,9 +215,12 @@ export async function POST(request: Request) {
                         },
                     });
                     sessionId = quiz.id;
+                    console.log("[career-quiz] Phase1 saved, sessionId:", sessionId);
+                } catch (dbErr) {
+                    console.error("[career-quiz] Failed to save phase1 quiz session:", dbErr);
                 }
-            } catch (dbErr) {
-                console.error("Failed to save phase1 quiz session:", dbErr);
+            } else {
+                console.log("[career-quiz] Skipping phase1 save — no userId");
             }
 
             return NextResponse.json({ questions: validated, sessionId });
@@ -249,10 +254,10 @@ export async function POST(request: Request) {
             }));
 
             // Save/update the quiz session in DB
-            try {
-                if (userId) {
+            if (userId) {
+                try {
+                    console.log("[career-quiz] Saving results. userId:", userId, "sessionId:", body.sessionId ?? "NONE");
                     if (body.sessionId) {
-                        // Update existing session
                         await prisma.quizSession.update({
                             where: { id: body.sessionId },
                             data: {
@@ -262,9 +267,9 @@ export async function POST(request: Request) {
                                 results: JSON.stringify(validated),
                             },
                         });
+                        console.log("[career-quiz] Updated session:", body.sessionId);
                     } else {
-                        // Create a new complete session (fallback if Phase 1 save failed)
-                        await prisma.quizSession.create({
+                        const created = await prisma.quizSession.create({
                             data: {
                                 userId,
                                 phase1Answers: JSON.stringify(
@@ -276,10 +281,13 @@ export async function POST(request: Request) {
                                 results: JSON.stringify(validated),
                             },
                         });
+                        console.log("[career-quiz] Created new full session:", created.id);
                     }
+                } catch (dbErr) {
+                    console.error("[career-quiz] Failed to save quiz results:", dbErr);
                 }
-            } catch (dbErr) {
-                console.error("Failed to save quiz session:", dbErr);
+            } else {
+                console.log("[career-quiz] Skipping results save — no userId");
             }
 
             return NextResponse.json({ results: validated });

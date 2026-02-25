@@ -8,8 +8,8 @@ const authPaths = ["/signin", "/signup"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow static and API auth routes
-  if (pathname.startsWith("/_next") || pathname.startsWith("/api/auth")) {
+  // Allow static and all API routes through (they handle their own auth)
+  if (pathname.startsWith("/_next") || pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
