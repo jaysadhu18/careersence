@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+// import { Footer } from "@/components/layout/Footer";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -44,7 +44,7 @@ export default function RootLayout({
               <main id="main-content" className="flex-1">
                 {children}
               </main>
-              <Footer />
+              {/* <Footer /> */}
               </div>
             </ToastProvider>
           </ThemeProvider>

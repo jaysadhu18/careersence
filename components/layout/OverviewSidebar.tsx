@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/dashboard", label: "Overview" },
+  { href: "/overview", label: "Overview" },
   { href: "/ai-roadmap", label: "AI Roadmap" },
   { href: "/career-quiz", label: "Career Quiz" },
   { href: "/career-tree", label: "Career Tree" },
@@ -14,13 +14,13 @@ const links = [
   { href: "/analyze", label: "Analyze" },
 ];
 
-export function DashboardSidebar() {
+export function OverviewSidebar() {
   const pathname = usePathname();
 
   return (
     <nav
       className="sticky top-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-sm)]"
-      aria-label="Dashboard navigation"
+      aria-label="Overview navigation"
     >
       <ul className="space-y-1" role="list">
         {links.map((link) => (

@@ -3,13 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
-import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
+import { OverviewSidebar } from "@/components/layout/OverviewSidebar";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { RoadmapHistorySection } from "@/components/domain/RoadmapHistorySection";
 import { QuizHistorySection } from "@/components/domain/QuizHistorySection";
 import { prisma } from "@/lib/prisma";
 
-export default async function DashboardPage() {
+export default async function OverviewPage() {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -69,9 +69,9 @@ export default async function DashboardPage() {
 
   return (
     <PageShell
-      title="Your career dashboard"
+      title="Your career overview"
       description="Here's where you stand and what to do next."
-      sidebar={<DashboardSidebar />}
+      sidebar={<OverviewSidebar />}
       maxWidth="xl"
     >
       <div className="space-y-8">

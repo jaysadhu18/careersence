@@ -95,7 +95,7 @@ export default function SignUpPage() {
         router.push("/signin");
         return;
       }
-      router.push("/dashboard");
+      router.push("/overview");
       router.refresh();
     } catch {
       setFormError("Something went wrong. Please try again.");

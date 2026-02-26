@@ -1,4 +1,4 @@
-import Link from "next/link";
+/*import Link from "next/link";
 import Image from "next/image";
 
 const footerLinks = [
@@ -42,10 +42,10 @@ export function Footer() {
             <ul className="mt-4 space-y-2" role="list">
               <li>
                 <Link
-                  href="/dashboard"
+                  href="/overview"
                   className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 >
-                  Dashboard
+                  Overview
                 </Link>
               </li>
               <li>
@@ -99,3 +99,4 @@ export function Footer() {
     </footer>
   );
 }
+*/

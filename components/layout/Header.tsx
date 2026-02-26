@@ -8,12 +8,14 @@ import { useSession, signOut } from "next-auth/react";
 import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
 
 const navLinks = [
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/overview", label: "Overview" },
   { href: "/ai-roadmap", label: "AI Roadmap" },
   { href: "/career-quiz", label: "Career Quiz" },
+  { href: "/career-tree", label: "Career Tree" },
   { href: "/learning-resources", label: "Learning" },
   { href: "/job-hunting", label: "Job Hunting" },
   { href: "/college-finder", label: "College Finder" },
+  { href: "/analyze", label: "Analyze" },
 ];
 
 export function Header() {
@@ -89,12 +91,12 @@ export function Header() {
                         role="menu"
                       >
                         <Link
-                          href="/dashboard"
+                          href="/profile"
                           className="block px-4 py-2 text-sm text-[var(--color-text)] no-underline hover:bg-[var(--color-background)]"
                           role="menuitem"
                           onClick={() => setUserMenuOpen(false)}
                         >
-                          Dashboard
+                          My Profile
                         </Link>
                         <button
                           type="button"

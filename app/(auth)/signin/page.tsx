@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/Card";
 function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/overview";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +63,7 @@ function SignInForm() {
             Welcome back
           </h2>
           <p className="mt-2 text-[var(--color-text-muted)]">
-            Sign in to access your career dashboard, AI roadmap, and personalized
+            Sign in to access your career overview, AI roadmap, and personalized
             learning resources.
           </p>
           <div className="mt-8 flex h-48 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-primary-50)] text-[var(--color-primary-600)]">

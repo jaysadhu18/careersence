@@ -24,13 +24,13 @@ careersence/
 │   ├── career-quiz/
 │   ├── career-tree/
 │   ├── college-finder/
-│   ├── dashboard/
+│   ├── overview/
 │   ├── job-hunting/
 │   ├── learning-resources/
 │   ├── layout.tsx
 │   └── globals.css
 ├── components/
-│   ├── layout/           # Header, Footer, PageShell, DashboardSidebar
+│   ├── layout/           # Header, Footer, PageShell, OverviewSidebar
 │   ├── ui/               # Button, Input, Select, Checkbox, Textarea, Card, Badge, Tabs, Modal, Toast, Accordion, Progress
 │   ├── domain/           # ResourceCard, RoadmapStepCard, JobCard, CollegeCard, QuizQuestionCard, ProgressHeader
 │   └── providers/        # ToastProvider
@@ -54,7 +54,7 @@ careersence/
 ## Authentication & database
 
 - **Guests** see only the **landing page** (`/`). Sign in and Sign up are in the header.
-- **After sign in or sign up**, users are redirected to the **main app** (e.g. Dashboard); all other routes require authentication.
+- **After sign in or sign up**, users are redirected to the **main app** (e.g. Overview); all other routes require authentication.
 - User data (email, hashed password, name, role, interests) is stored in **PostgreSQL**.
 
 ### Setup PostgreSQL
@@ -77,7 +77,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Sign up or sign in to access Dashboard, AI Roadmap, and the rest of the app.
+Open [http://localhost:3000](http://localhost:3000). Sign up or sign in to access Overview, AI Roadmap, and the rest of the app.
 
 ## Build
 
@@ -93,7 +93,7 @@ npm start
 | `/` | Landing page |
 | `/signin` | Sign in form |
 | `/signup` | Sign up with role and interests |
-| `/dashboard` | Personalized dashboard with roadmap, quiz, resources, job snapshot |
+| `/overview` | Personalized overview with roadmap, quiz, resources, job snapshot |
 | `/career-quiz` | Multi-step quiz with results and “Add to roadmap” |
 | `/ai-roadmap` | Timeline of stages with status and action items |
 | `/learning-resources` | Filterable resource grid (course/article/video) |

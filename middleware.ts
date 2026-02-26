@@ -29,9 +29,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(signIn);
   }
 
-  // Signed in: redirect away from signin/signup to dashboard
+  // Signed in: redirect away from signin/signup to overview
   if (isAuthPage) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/overview", request.url));
   }
 
   return NextResponse.next();

@@ -157,7 +157,7 @@ npm run dev
 2. Open a browser and go to: **http://localhost:3000**
 3. You should see the **landing page**.
 4. Click **Sign up**, create an account (name, email, password, role).
-5. After signup you should be redirected to the **Dashboard**.
+5. After signup you should be redirected to the **Overview**.
 6. In pgAdmin, check the **User** table (Step 8) — you should see your new user row.
 
 ---

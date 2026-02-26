@@ -12,6 +12,7 @@ model User {
   email     String     @unique
   password  String
   name      String?
+  phone     String?
   role      String?    // student, recent_graduate, career_switcher, other
   interests String?    // JSON array of selected interests
   createdAt DateTime   @default(now())
