@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -36,6 +37,7 @@ export function Header() {
           className="flex shrink-0 items-center gap-2 text-lg font-semibold text-[var(--color-text)] no-underline"
           aria-label="Careersence home"
         >
+          <Image src="/icon.png" alt="Careersence logo" width={32} height={32} className="h-8 w-8" />
           <span className="text-[var(--color-primary-600)]">Careersence</span>
         </Link>
 

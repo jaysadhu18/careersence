@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const footerLinks = [
   { href: "/", label: "About" },
@@ -19,8 +20,9 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link
               href="/"
-              className="text-lg font-semibold text-[var(--color-primary-600)] no-underline"
+              className="flex items-center gap-2 text-lg font-semibold text-[var(--color-primary-600)] no-underline"
             >
+              <Image src="/icon.png" alt="Careersence logo" width={32} height={32} className="h-8 w-8" />
               Careersence
             </Link>
             <p className="mt-2 max-w-md text-sm text-[var(--color-text-muted)]">
