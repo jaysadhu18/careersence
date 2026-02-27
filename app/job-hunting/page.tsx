@@ -5,6 +5,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { getCountries, getStates, getCities } from "@/lib/location-data";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -57,7 +58,9 @@ export default function JobHuntingPage() {
 
   // ── Discover tab state ──
   const [query, setQuery] = useState("");
-  const [location, setLocation] = useState("India");
+  const [country, setCountry] = useState("India");
+  const [selectedState, setSelectedState] = useState("");
+  const [city, setCity] = useState("");
   const [discovering, setDiscovering] = useState(false);
   const [discoveredJobs, setDiscoveredJobs] = useState<DiscoveredJob[]>([]);
   const [discoverError, setDiscoverError] = useState("");
@@ -88,6 +91,16 @@ export default function JobHuntingPage() {
     loadSavedJobs();
   }, [loadSavedJobs]);
 
+  // ── Derived location lists ──
+  const countries = getCountries();
+  const states = getStates(country);
+  const cities = getCities(country, selectedState);
+
+  // Build location string from selections
+  const locationString = [city, selectedState, country]
+    .filter(Boolean)
+    .join(", ");
+
   // ── Search jobs ──
   const searchJobs = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -96,7 +109,7 @@ export default function JobHuntingPage() {
     try {
       const params = new URLSearchParams({
         query: query || "software engineer",
-        location: location || "India",
+        location: locationString || "India",
       });
       const res = await fetch(`/api/jobs/search?${params}`);
       const data = await res.json();
@@ -210,8 +223,9 @@ export default function JobHuntingPage() {
         <div className="space-y-6">
           {/* Search form */}
           <Card padding="md">
-            <form onSubmit={searchJobs} className="flex flex-wrap gap-3">
-              <div className="flex-1 min-w-[200px]">
+            <form onSubmit={searchJobs} className="space-y-4">
+              {/* Row 1: Keywords */}
+              <div>
                 <Input
                   label="Job title or keywords"
                   placeholder="e.g. Software Engineer, Data Analyst"
@@ -219,15 +233,83 @@ export default function JobHuntingPage() {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
-              <div className="w-48">
-                <Input
-                  label="Location"
-                  placeholder="e.g. India, Bangalore"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
+
+              {/* Row 2: Location dropdowns */}
+              <div className="flex flex-wrap gap-3">
+                {/* Country */}
+                <div className="flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
+                    Country
+                  </label>
+                  <select
+                    value={country}
+                    onChange={(e) => {
+                      setCountry(e.target.value);
+                      setSelectedState("");
+                      setCity("");
+                    }}
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
+                  >
+                    <option value="">Select country</option>
+                    {countries.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* State */}
+                <div className="flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
+                    State / Region
+                  </label>
+                  <select
+                    value={selectedState}
+                    onChange={(e) => {
+                      setSelectedState(e.target.value);
+                      setCity("");
+                    }}
+                    disabled={!country}
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
+                  >
+                    <option value="">All states</option>
+                    {states.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* City */}
+                <div className="flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
+                    City
+                  </label>
+                  <select
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    disabled={!selectedState}
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
+                  >
+                    <option value="">All cities</option>
+                    {cities.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="flex items-end">
+
+              {/* Location preview + Search button */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {locationString && (
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    📍 Searching in: <span className="font-medium text-[var(--color-text)]">{locationString}</span>
+                  </p>
+                )}
                 <Button type="submit" variant="primary" loading={discovering}>
                   Search Jobs
                 </Button>

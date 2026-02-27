@@ -11,6 +11,9 @@ export interface College {
   costRange: string;
   admissionRate: string;
   strengths: string[];
+  stateRanking?: string;
+  countryRanking?: string;
+  worldRanking?: string;
 }
 
 export function useCollegeSearch(filters?: {
