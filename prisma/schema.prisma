@@ -20,6 +20,7 @@ model User {
   roadmaps     Roadmap[]
   savedJobs    SavedJob[]
   quizSessions QuizSession[]
+  careerTrees  CareerTree[]
 }
 
 model Roadmap {
@@ -58,4 +59,14 @@ model QuizSession {
   results         String?  // JSON: AI-generated career recommendations
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model CareerTree {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rootTitle   String                      // e.g. "Tech Career"
+  formInput   String                      // JSON: skills, passions, currentStage, goals
+  treeData    String                      // JSON: full CareerTreeData (root + branches)
+  createdAt   DateTime @default(now())
 }

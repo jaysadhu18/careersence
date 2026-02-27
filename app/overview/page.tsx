@@ -7,6 +7,7 @@ import { OverviewSidebar } from "@/components/layout/OverviewSidebar";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { RoadmapHistorySection } from "@/components/domain/RoadmapHistorySection";
 import { QuizHistorySection } from "@/components/domain/QuizHistorySection";
+import { CareerTreeHistorySection } from "@/components/domain/CareerTreeHistorySection";
 import { prisma } from "@/lib/prisma";
 
 export default async function OverviewPage() {
@@ -67,6 +68,25 @@ export default async function OverviewPage() {
     quizSessions = [];
   }
 
+  // Fetch career trees from DB
+  let careerTrees: { id: string; rootTitle: string; formInput: string; treeData: string; createdAt: string }[] = [];
+  try {
+    if (user?.id) {
+      const rows = await prisma.careerTree.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { id: true, rootTitle: true, formInput: true, treeData: true, createdAt: true },
+      });
+      careerTrees = rows.map((r: { id: string; rootTitle: string; formInput: string; treeData: string; createdAt: Date }) => ({
+        ...r,
+        createdAt: r.createdAt.toISOString(),
+      }));
+    }
+  } catch {
+    careerTrees = [];
+  }
+
   return (
     <PageShell
       title="Your career overview"
@@ -96,6 +116,23 @@ export default async function OverviewPage() {
             </Link>
           </div>
         </Card>
+
+        {/* Career Trees */}
+        <section className="space-y-4">
+          <CardHeader
+            title="Career Trees"
+            description="Your AI-generated career path visualizations."
+            action={
+              <Link
+                href="/career-tree"
+                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+              >
+                + Generate new
+              </Link>
+            }
+          />
+          <CareerTreeHistorySection trees={careerTrees} />
+        </section>
 
         {/* Previous AI Roadmaps */}
         <section className="space-y-4">

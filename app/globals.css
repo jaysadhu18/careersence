@@ -116,39 +116,49 @@ body {
   font-weight: 500;
   transition: top 0.2s;
 }
+
 .skip-link:focus {
   top: 0.5rem;
 }
 
 /* Roadmap eye-candy */
 .roadmap-timeline-line {
-  background: linear-gradient(
-    180deg,
-    var(--color-primary-400) 0%,
-    var(--color-primary-500) 25%,
-    var(--color-secondary-500) 50%,
-    var(--color-secondary-400) 75%,
-    var(--color-primary-400) 100%
-  );
+  background: linear-gradient(180deg,
+      var(--color-primary-400) 0%,
+      var(--color-primary-500) 25%,
+      var(--color-secondary-500) 50%,
+      var(--color-secondary-400) 75%,
+      var(--color-primary-400) 100%);
   background-size: 100% 400%;
   animation: roadmap-line-shine 8s ease-in-out infinite;
 }
+
 @keyframes roadmap-line-shine {
-  0%, 100% { opacity: 0.85; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .roadmap-node {
   box-shadow: 0 0 0 4px var(--color-background), 0 0 20px -2px var(--color-primary-400);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 .roadmap-node:hover {
   transform: scale(1.05);
   box-shadow: 0 0 0 4px var(--color-background), 0 0 24px 0 var(--color-primary-400);
 }
+
 .roadmap-node.completed {
   box-shadow: 0 0 0 4px var(--color-background), 0 0 16px -2px var(--color-success);
 }
+
 .roadmap-node.in-progress {
   box-shadow: 0 0 0 4px var(--color-background), 0 0 20px -2px var(--color-primary-500);
 }
@@ -156,6 +166,7 @@ body {
 .roadmap-card {
   transition: transform 0.2s ease, box-shadow 0.25s ease;
 }
+
 .roadmap-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px -8px rgb(37 99 235 / 0.15), 0 4px 12px -4px rgb(0 0 0 / 0.08);
@@ -168,6 +179,238 @@ body {
 .roadmap-action-item {
   transition: background 0.15s ease, padding-left 0.15s ease;
 }
+
 .roadmap-action-item:hover {
   padding-left: 4px;
+}
+
+/* Career Tree eye-candy */
+.career-tree-root {
+  animation: ct-fade-down 0.5s ease both;
+}
+
+.career-tree-trunk {
+  animation: ct-grow 0.4s 0.4s ease both;
+  transform-origin: top;
+}
+
+@keyframes ct-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ct-grow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.career-tree-branch {
+  animation: ct-fade-up 0.5s ease both;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.career-tree-branch:nth-child(1) {
+  animation-delay: 0.55s;
+}
+
+.career-tree-branch:nth-child(2) {
+  animation-delay: 0.70s;
+}
+
+.career-tree-branch:nth-child(3) {
+  animation-delay: 0.85s;
+}
+
+.career-tree-branch:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgb(0 0 0 / 0.12), 0 4px 12px -4px rgb(0 0 0 / 0.08);
+}
+
+@keyframes ct-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Polished React Flow Tree Styles ─── */
+.react-flow__background {
+  background: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%);
+}
+
+.react-flow__node {
+  border: none;
+  background: transparent;
+  padding: 0;
+  transition: filter 0.3s ease;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2.5;
+  stroke: var(--color-border);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+}
+
+.react-flow__edge-label {
+  pointer-events: none;
+  font-family: var(--font-outfit), sans-serif;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
+}
+
+.react-flow__edge-label>div {
+  background: rgba(3, 7, 18, 0.8) !important;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 12px !important;
+  border-radius: 8px !important;
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 10;
+  stroke-width: 3.5;
+  animation: edge-flow 3s linear infinite;
+}
+
+@keyframes edge-flow {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.react-flow__controls {
+  background: rgba(17, 24, 39, 0.7) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  border-radius: var(--radius-xl) !important;
+  padding: 4px !important;
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border: none !important;
+  color: white !important;
+  fill: white !important;
+  border-radius: var(--radius-md) !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.1);
+}
+
+/* Custom Node: Root (Glassmorphism + Glow) */
+.node-root {
+  min-width: 280px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 2rem;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.node-root::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg,
+      transparent,
+      var(--color-primary-500),
+      var(--color-secondary-500),
+      var(--color-primary-500),
+      transparent);
+  animation: rotate-glow 10s linear infinite;
+  opacity: 0.15;
+}
+
+@keyframes rotate-glow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom Node: Milestone */
+.node-milestone {
+  min-width: 220px;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.node-milestone:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: rgba(17, 24, 39, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.node-milestone-header {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  color: white;
+  margin-bottom: 0.35rem;
+}
+
+.node-milestone-time {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.6rem;
+  border-radius: 2rem;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+}
+
+.node-milestone-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.5rem;
 }
