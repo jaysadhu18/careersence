@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CareerResult {
@@ -34,14 +35,18 @@ export function QuizHistorySection({ quizzes: initialQuizzes }: { quizzes: QuizE
     const [quizzes, setQuizzes] = useState<QuizEntry[]>(initialQuizzes);
     const [expanded, setExpanded] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-    async function handleDelete(id: string) {
+    async function handleDelete() {
+        if (!confirmDeleteId) return;
+        const id = confirmDeleteId;
         setDeleting(id);
         try {
             const res = await fetch(`/api/career-quiz/${id}`, { method: "DELETE" });
             if (res.ok) {
                 setQuizzes((prev) => prev.filter((q) => q.id !== id));
                 if (expanded === id) setExpanded(null);
+                setConfirmDeleteId(null);
             }
         } finally {
             setDeleting(null);
@@ -193,7 +198,7 @@ export function QuizHistorySection({ quizzes: initialQuizzes }: { quizzes: QuizE
 
                                 {/* Delete button */}
                                 <button
-                                    onClick={() => handleDelete(quiz.id)}
+                                    onClick={() => setConfirmDeleteId(quiz.id)}
                                     disabled={isDeleting}
                                     title="Delete"
                                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
@@ -313,6 +318,16 @@ export function QuizHistorySection({ quizzes: initialQuizzes }: { quizzes: QuizE
                     );
                 })}
             </AnimatePresence>
+
+            <ConfirmModal
+                open={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                onConfirm={handleDelete}
+                title="Delete Quiz Attempt"
+                description="Are you sure you want to delete this quiz attempt? This action cannot be undone."
+                confirmText="Delete"
+                loading={!!deleting}
+            />
         </motion.div>
     );
 }
