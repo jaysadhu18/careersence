@@ -39,8 +39,8 @@ export function Header() {
           className="flex shrink-0 items-center gap-2 text-lg font-semibold text-[var(--color-text)] no-underline"
           aria-label="Careersence home"
         >
-          <Image src="/icon.png" alt="Careersence logo" width={32} height={32} className="h-8 w-8" />
-          <span className="text-[var(--color-primary-600)]">Careersence</span>
+          <Image src="/logo.png" alt="Careersence logo" width={40} height={40} className="h-10 w-10 rounded" />
+          <span className="hidden sm:inline">CareerSence</span>
         </Link>
 
         {isLoggedIn && (
@@ -52,11 +52,10 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  pathname === link.href
-                    ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
-                    : "text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
-                }`}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${pathname === link.href
+                  ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                  : "text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
+                  }`}
               >
                 {link.label}
               </Link>
@@ -177,11 +176,10 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                  pathname === link.href
-                    ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
-                    : "text-[var(--color-text)]"
-                }`}
+                className={`rounded-lg px-3 py-2 text-sm font-medium ${pathname === link.href
+                  ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                  : "text-[var(--color-text)]"
+                  }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}

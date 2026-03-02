@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
@@ -36,7 +36,41 @@ export default function AnalyzePage() {
   const [careerA, setCareerA] = useState("");
   const [careerB, setCareerB] = useState("");
   const [loading, setLoading] = useState(false);
+  const [parsingFile, setParsingFile] = useState(false);
   const [result, setResult] = useState<"resume" | "job" | "career" | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setParsingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/parse-resume", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to parse file");
+      }
+
+      const data = await response.json();
+      setResumeText(data.text);
+    } catch (error: any) {
+      alert(error.message || "Error reading file. Please try again.");
+    } finally {
+      setParsingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Reset input
+      }
+    }
+  };
+
 
   const runAnalysis = async (type: "resume" | "job" | "career") => {
     setLoading(true);
@@ -65,20 +99,36 @@ export default function AnalyzePage() {
               Paste your resume (or a section)
             </h3>
             <Textarea
-              placeholder="Paste resume text here. You can also upload a file (coming soon)."
+              placeholder="Paste resume text here or upload a file (.pdf, .docx, .txt)"
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               rows={8}
               className="mb-4"
             />
-            <Button
-              variant="primary"
-              loading={loading}
-              onClick={() => runAnalysis("resume")}
-              disabled={!resumeText.trim()}
-            >
-              Run analysis
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="primary"
+                loading={loading}
+                onClick={() => runAnalysis("resume")}
+                disabled={!resumeText.trim()}
+              >
+                Run analysis
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".txt,.pdf,.docx"
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                loading={parsingFile}
+              >
+                {parsingFile ? "Parsing..." : "Upload Resume (.pdf, .docx, .txt)"}
+              </Button>
+            </div>
           </Card>
           {result === "resume" && (
             <Card padding="lg">
