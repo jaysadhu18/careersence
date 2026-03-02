@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -339,202 +340,239 @@ export default function CareerTreePage() {
       maxWidth="xl"
     >
       {/* ── FORM VIEW ─────────────────────────────────────────────────────── */}
-      {view === "form" && (
-        <div className="mx-auto max-w-2xl">
-          <Card
-            padding="lg"
-            className="border-2 border-[var(--color-border)] bg-gradient-to-b from-[var(--color-surface)] to-[var(--color-background)] shadow-[var(--shadow-lg)]"
+      <AnimatePresence mode="wait">
+        {view === "form" && (
+          <motion.div
+            key="form-view"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mx-auto max-w-2xl px-4"
           >
-            <div className="mb-6 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white shadow-lg">
-                <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stepIcons[step - 1]} />
-                </svg>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">
-                  Step {step} of {totalSteps}
+            <Card
+              padding="lg"
+              className="border-2 border-[var(--color-border)] bg-gradient-to-b from-[var(--color-surface)] to-[var(--color-background)] shadow-[var(--shadow-lg)]"
+            >
+              <div className="mb-6 flex items-center gap-4">
+                <motion.div
+                  key={step}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white shadow-lg"
+                >
+                  <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stepIcons[step - 1]} />
+                  </svg>
+                </motion.div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">
+                    Step {step} of {totalSteps}
+                  </div>
+                  <h2 className="text-xl font-bold text-[var(--color-text)]">{stepLabels[step - 1]}</h2>
                 </div>
-                <h2 className="text-xl font-bold text-[var(--color-text)]">{stepLabels[step - 1]}</h2>
               </div>
-            </div>
 
-            <StepIndicator step={step} total={totalSteps} />
+              <StepIndicator step={step} total={totalSteps} />
 
-            {error && (
-              <div
-                className="mb-4 rounded-lg border border-[var(--color-error)] bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-800 dark:text-red-300"
-                role="alert"
-              >
-                {error}
-              </div>
-            )}
-
-            {step === 1 && (
-              <div className="space-y-5">
-                <Textarea
-                  label="Your current skills"
-                  placeholder="e.g. Python, mathematics, writing, public speaking..."
-                  value={form.skills}
-                  onChange={set("skills")}
-                  rows={3}
-                  required
-                />
-                <Textarea
-                  label="Your passions & interests"
-                  placeholder="e.g. AI/machine learning, helping people, creative design..."
-                  value={form.passions}
-                  onChange={set("passions")}
-                  rows={3}
-                  required
-                />
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-5">
-                <Textarea
-                  label="Roles or industries you've researched"
-                  placeholder="e.g. Data Scientist, Software Engineer..."
-                  value={form.targetRoles}
-                  onChange={set("targetRoles")}
-                  rows={3}
-                />
-                <Select
-                  label="Your current stage"
-                  value={form.currentStage}
-                  onChange={set("currentStage")}
-                  required
-                  options={[
-                    { value: "", label: "Select your stage..." },
-                    ...STAGES.map((s) => ({ value: s, label: s })),
-                  ]}
-                />
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-5">
-                <Textarea
-                  label="Short-term goal (next 6–12 months)"
-                  placeholder="e.g. Land a data science internship..."
-                  value={form.shortTermGoal}
-                  onChange={set("shortTermGoal")}
-                  rows={2}
-                  required
-                />
-                <Textarea
-                  label="Long-term goal (3–5 years from now)"
-                  placeholder="e.g. Become a senior ML engineer..."
-                  value={form.longTermGoal}
-                  onChange={set("longTermGoal")}
-                  rows={2}
-                  required
-                />
-              </div>
-            )}
-
-            <div className="mt-8 flex items-center justify-between gap-4">
-              {step > 1 ? (
-                <Button variant="outline" onClick={handleBack}>
-                  ← Back
-                </Button>
-              ) : (
-                <div />
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="mb-4 rounded-lg border border-[var(--color-error)] bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-800 dark:text-red-300"
+                  role="alert"
+                >
+                  {error}
+                </motion.div>
               )}
 
-              {step < totalSteps ? (
-                <Button
-                  variant="primary"
-                  onClick={handleNext}
-                  disabled={!canProceed()}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  Next step →
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  onClick={handleGenerate}
-                  disabled={!canProceed()}
-                >
-                  Generate My Career Tree
-                </Button>
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
+                  {step === 1 && (
+                    <div className="space-y-5">
+                      <Textarea
+                        label="Your current skills"
+                        placeholder="e.g. Python, mathematics, writing, public speaking..."
+                        value={form.skills}
+                        onChange={set("skills")}
+                        rows={3}
+                        required
+                      />
+                      <Textarea
+                        label="Your passions & interests"
+                        placeholder="e.g. AI/machine learning, helping people, creative design..."
+                        value={form.passions}
+                        onChange={set("passions")}
+                        rows={3}
+                        required
+                      />
+                    </div>
+                  )}
 
-      {/* ── LOADING VIEW ──────────────────────────────────────────────────── */}
-      {view === "loading" && (
-        <Card padding="lg" className="mx-auto max-w-md text-center bg-transparent border-0 shadow-none">
-          <div className="relative mx-auto h-24 w-24 mb-6">
-            <div className="absolute inset-0 animate-ping rounded-full bg-[var(--color-primary-500)]/20" />
-            <div className="relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-secondary-500)] shadow-lg shadow-[var(--color-primary-500)]/40">
-              <svg className="h-12 w-12 animate-pulse text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-          </div>
-          <p className="font-black text-xl text-[var(--color-text)] uppercase tracking-tighter">
-            Architecting Your Future
-          </p>
-          <p className="mt-2 text-sm text-[var(--color-text-muted)] font-medium">
-            AI is mapping thousands of possibilities into 3 optimal paths...
-          </p>
-          <div className="mt-8 flex justify-center gap-1.5">
-            {[0, 1, 2, 3].map((i) => (
-              <span key={i} className="h-1.5 w-6 rounded-full bg-[var(--color-primary-500)]/20 overflow-hidden">
-                <div
-                  className="h-full bg-[var(--color-primary-500)]"
-                  style={{
-                    width: '100%',
-                    animation: `shimmer 1.5s infinite ${i * 0.2}s`
-                  }}
-                />
-              </span>
-            ))}
-          </div>
-        </Card>
-      )}
+                  {step === 2 && (
+                    <div className="space-y-5">
+                      <Textarea
+                        label="Roles or industries you've researched"
+                        placeholder="e.g. Data Scientist, Software Engineer..."
+                        value={form.targetRoles}
+                        onChange={set("targetRoles")}
+                        rows={3}
+                      />
+                      <Select
+                        label="Your current stage"
+                        value={form.currentStage}
+                        onChange={set("currentStage")}
+                        required
+                        options={[
+                          { value: "", label: "Select your stage..." },
+                          ...STAGES.map((s) => ({ value: s, label: s })),
+                        ]}
+                      />
+                    </div>
+                  )}
 
-      {/* ── TREE VIEW ─────────────────────────────────────────────────────── */}
-      {view === "tree" && (
-        <div className="h-[800px] w-full relative rounded-[2.5rem] border border-white/5 bg-[#030712] overflow-hidden shadow-2xl">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            fitView
-            minZoom={0.1}
-            maxZoom={2}
+                  {step === 3 && (
+                    <div className="space-y-5">
+                      <Textarea
+                        label="Short-term goal (next 6–12 months)"
+                        placeholder="e.g. Land a data science internship..."
+                        value={form.shortTermGoal}
+                        onChange={set("shortTermGoal")}
+                        rows={2}
+                        required
+                      />
+                      <Textarea
+                        label="Long-term goal (3–5 years from now)"
+                        placeholder="e.g. Become a senior ML engineer..."
+                        value={form.longTermGoal}
+                        onChange={set("longTermGoal")}
+                        rows={2}
+                        required
+                      />
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="mt-8 flex items-center justify-between gap-4">
+                {step > 1 ? (
+                  <Button variant="outline" onClick={handleBack}>
+                    ← Back
+                  </Button>
+                ) : (
+                  <div />
+                )}
+
+                {step < totalSteps ? (
+                  <Button
+                    variant="primary"
+                    onClick={handleNext}
+                    disabled={!canProceed()}
+                  >
+                    Next step →
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    onClick={handleGenerate}
+                    disabled={!canProceed()}
+                  >
+                    Generate My Career Tree
+                  </Button>
+                )}
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* ── LOADING VIEW ──────────────────────────────────────────────────── */}
+        {view === "loading" && (
+          <motion.div
+            key="loading-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center py-20"
           >
-            <Background color="#1f2937" size={1.5} gap={24} variant={"dots" as any} />
-            <Controls className="!bg-black/50 !border-white/10 !rounded-2xl backdrop-blur-xl" />
-
-            <Panel position="top-right" className="flex gap-3">
-              <Button size="sm" variant="outline" onClick={startOver} className="!rounded-2xl !bg-black/50 !backdrop-blur-xl !border-white/10 text-white">
-                Start Over
-              </Button>
-              <Button size="sm" variant="primary" onClick={() => window.print()} className="!rounded-2xl shadow-lg shadow-[var(--color-primary-500)]/40">
-                Export Plan
-              </Button>
-            </Panel>
-
-            <Panel position="bottom-left" className="bg-white/5 backdrop-blur-2xl p-6 rounded-[2rem] border border-white/10 max-w-xs shadow-2xl m-6">
-              <h4 className="font-black text-white text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Navigator
-              </h4>
-              <p className="text-[10px] text-white/50 leading-relaxed font-medium">
-                Welcome to your interactive career architecture. Connect with **Root** to see your foundation, or explore the **Branches** to discover your potential. Click any node for detailed action plans.
+            <Card padding="lg" className="mx-auto max-w-md text-center bg-transparent border-0 shadow-none">
+              <div className="relative mx-auto h-24 w-24 mb-6">
+                <div className="absolute inset-0 animate-ping rounded-full bg-[var(--color-primary-500)]/20" />
+                <div className="relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-secondary-500)] shadow-lg shadow-[var(--color-primary-500)]/40">
+                  <svg className="h-12 w-12 animate-pulse text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+              </div>
+              <p className="font-black text-xl text-[var(--color-text)] uppercase tracking-tighter">
+                Architecting Your Future
               </p>
-            </Panel>
-          </ReactFlow>
-        </div>
-      )}
+              <p className="mt-2 text-sm text-[var(--color-text-muted)] font-medium">
+                AI is mapping thousands of possibilities into 3 optimal paths...
+              </p>
+              <div className="mt-8 flex justify-center gap-1.5">
+                {[0, 1, 2, 3].map((i) => (
+                  <span key={i} className="h-1.5 w-6 rounded-full bg-[var(--color-primary-500)]/20 overflow-hidden">
+                    <motion.div
+                      className="h-full bg-[var(--color-primary-500)]"
+                      initial={{ x: "-100%" }}
+                      animate={{ x: "100%" }}
+                      transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
+                    />
+                  </span>
+                ))}
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* ── TREE VIEW ─────────────────────────────────────────────────────── */}
+        {view === "tree" && (
+          <motion.div
+            key="tree-view"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="h-[800px] w-full relative rounded-[2.5rem] border border-white/5 bg-[#030712] overflow-hidden shadow-2xl"
+          >
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={nodeTypes}
+              fitView
+              minZoom={0.1}
+              maxZoom={2}
+            >
+              <Background color="#1f2937" size={1.5} gap={24} variant={"dots" as any} />
+              <Controls className="!bg-black/50 !border-white/10 !rounded-2xl backdrop-blur-xl" />
+
+              <Panel position="top-right" className="flex gap-3">
+                <Button size="sm" variant="outline" onClick={startOver} className="!rounded-2xl !bg-black/50 !backdrop-blur-xl !border-white/10 text-white">
+                  Start Over
+                </Button>
+                <Button size="sm" variant="primary" onClick={() => window.print()} className="!rounded-2xl shadow-lg shadow-[var(--color-primary-500)]/40">
+                  Export Plan
+                </Button>
+              </Panel>
+
+              <Panel position="bottom-left" className="bg-white/5 backdrop-blur-2xl p-6 rounded-[2rem] border border-white/10 max-w-xs shadow-2xl m-6">
+                <h4 className="font-black text-white text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Navigator
+                </h4>
+                <p className="text-[10px] text-white/50 leading-relaxed font-medium">
+                  Welcome to your interactive career architecture. Connect with **Root** to see your foundation, or explore the **Branches** to discover your potential. Click any node for detailed action plans.
+                </p>
+              </Panel>
+            </ReactFlow>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── DETAILS MODAL ─────────────────────────────────────────────────── */}
       {selectedMilestone && (

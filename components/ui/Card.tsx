@@ -1,8 +1,12 @@
-import { HTMLAttributes, ReactNode } from "react";
+"use client";
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
+import { ReactNode } from "react";
+import { motion, HTMLMotionProps } from "framer-motion";
+
+interface CardProps extends HTMLMotionProps<"div"> {
   children: ReactNode;
   padding?: "none" | "sm" | "md" | "lg";
+  hoverable?: boolean;
 }
 
 const paddingClasses = {
@@ -16,15 +20,18 @@ export function Card({
   children,
   padding = "md",
   className = "",
+  hoverable = false,
   ...props
 }: CardProps) {
   return (
-    <div
+    <motion.div
+      whileHover={hoverable ? { y: -4, scale: 1.01, boxShadow: "var(--shadow-md)" } : {}}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-soft)] ${paddingClasses[padding]} ${className}`}
       {...props}
     >
-      {children}
-    </div>
+      {children as ReactNode}
+    </motion.div>
   );
 }
 

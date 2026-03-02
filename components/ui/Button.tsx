@@ -1,6 +1,9 @@
-import { ButtonHTMLAttributes, ReactNode } from "react";
+"use client";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+import { ReactNode } from "react";
+import { motion, HTMLMotionProps } from "framer-motion";
+
+interface ButtonProps extends HTMLMotionProps<"button"> {
   variant?: "primary" | "secondary" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
@@ -40,9 +43,11 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <motion.button
+      whileHover={!disabled && !loading ? { scale: 1.02 } : {}}
+      whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
       type="button"
-      className={`inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={`inline-flex items-center justify-center focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 transition-colors ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
       disabled={disabled || loading}
       {...props}
     >
@@ -69,10 +74,10 @@ export function Button({
           />
         </svg>
       ) : (
-        leftIcon
+        leftIcon as ReactNode
       )}
-      {children}
-      {!loading && rightIcon}
-    </button>
+      {children as ReactNode}
+      {!loading && (rightIcon as ReactNode)}
+    </motion.button>
   );
 }

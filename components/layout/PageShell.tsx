@@ -1,4 +1,7 @@
+"use client";
+
 import { ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface PageShellProps {
   children: ReactNode;
@@ -26,9 +29,8 @@ export function PageShell({
   return (
     <div className="mx-auto w-full px-6 py-10 sm:px-8 lg:px-12">
       <div
-        className={`mx-auto ${maxWidthClasses[maxWidth]} ${
-          sidebar ? "flex gap-8 lg:flex-row" : ""
-        }`}
+        className={`mx-auto ${maxWidthClasses[maxWidth]} ${sidebar ? "flex gap-8 lg:flex-row" : ""
+          }`}
       >
         {sidebar && (
           <aside
@@ -38,7 +40,12 @@ export function PageShell({
             {sidebar}
           </aside>
         )}
-        <div className="min-w-0 flex-1">
+        <motion.div
+          className="min-w-0 flex-1"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
           <header className="mb-8">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text)] sm:text-3xl">
               {title}
@@ -50,7 +57,7 @@ export function PageShell({
             )}
           </header>
           {children}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

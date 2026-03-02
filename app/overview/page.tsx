@@ -9,6 +9,7 @@ import { RoadmapHistorySection } from "@/components/domain/RoadmapHistorySection
 import { QuizHistorySection } from "@/components/domain/QuizHistorySection";
 import { CareerTreeHistorySection } from "@/components/domain/CareerTreeHistorySection";
 import { prisma } from "@/lib/prisma";
+import { FadeInContent } from "@/components/layout/FadeInContent";
 
 export default async function OverviewPage() {
   const session = await getServerSession(authOptions);
@@ -97,76 +98,84 @@ export default async function OverviewPage() {
       <div className="space-y-8">
 
         {/* Job Hunting - full width rectangle */}
-        <Card padding="md" className="w-full">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-[var(--color-text)]">Job hunting</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">Saved roles and applications.</p>
-              <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[var(--color-text-muted)]">
-                <span>Saved: <strong>{totalSavedJobs}</strong></span>
-                <span>Applied: <strong>{appliedJobs}</strong></span>
-                <span>Interviewing: <strong>{interviewingJobs}</strong></span>
+        <FadeInContent delay={0.1}>
+          <Card padding="md" className="w-full" hoverable>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--color-text)]">Job hunting</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">Saved roles and applications.</p>
+                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[var(--color-text-muted)]">
+                  <span>Saved: <strong>{totalSavedJobs}</strong></span>
+                  <span>Applied: <strong>{appliedJobs}</strong></span>
+                  <span>Interviewing: <strong>{interviewingJobs}</strong></span>
+                </div>
               </div>
+              <Link
+                href="/job-hunting"
+                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+              >
+                Manage jobs
+              </Link>
             </div>
-            <Link
-              href="/job-hunting"
-              className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
-            >
-              Manage jobs
-            </Link>
-          </div>
-        </Card>
+          </Card>
+        </FadeInContent>
 
         {/* Career Trees */}
-        <section className="space-y-4">
-          <CardHeader
-            title="Career Trees"
-            description="Your AI-generated career path visualizations."
-            action={
-              <Link
-                href="/career-tree"
-                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
-              >
-                + Generate new
-              </Link>
-            }
-          />
-          <CareerTreeHistorySection trees={careerTrees} />
-        </section>
+        <FadeInContent delay={0.2}>
+          <section className="space-y-4">
+            <CardHeader
+              title="Career Trees"
+              description="Your AI-generated career path visualizations."
+              action={
+                <Link
+                  href="/career-tree"
+                  className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+                >
+                  + Generate new
+                </Link>
+              }
+            />
+            <CareerTreeHistorySection trees={careerTrees} />
+          </section>
+        </FadeInContent>
 
         {/* Previous AI Roadmaps */}
-        <section className="space-y-4">
-          <CardHeader
-            title="Previous Roadmaps"
-            description="Your AI-generated roadmaps, saved for reference."
-            action={
-              <Link
-                href="/ai-roadmap"
-                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
-              >
-                + Generate new
-              </Link>
-            }
-          />
-          <RoadmapHistorySection roadmaps={previousRoadmaps} />
-        </section>
+        <FadeInContent delay={0.3}>
+          <section className="space-y-4">
+            <CardHeader
+              title="Previous Roadmaps"
+              description="Your AI-generated roadmaps, saved for reference."
+              action={
+                <Link
+                  href="/ai-roadmap"
+                  className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+                >
+                  + Generate new
+                </Link>
+              }
+            />
+            <RoadmapHistorySection roadmaps={previousRoadmaps} />
+          </section>
+        </FadeInContent>
 
         {/* Career Quiz History */}
-        <section className="space-y-4">
-          <CardHeader
-            title="Career Quiz History"
-            description="Your AI-powered career assessment results."
-            action={
-              <Link
-                href="/career-quiz"
-                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
-              >
-                + Take quiz
-              </Link>
-            }
-          />
-          <QuizHistorySection quizzes={quizSessions} />
-        </section>
+        <FadeInContent delay={0.4}>
+          <section className="space-y-4">
+            <CardHeader
+              title="Career Quiz History"
+              description="Your AI-powered career assessment results."
+              action={
+                <Link
+                  href="/career-quiz"
+                  className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+                >
+                  + Take quiz
+                </Link>
+              }
+            />
+            <QuizHistorySection quizzes={quizSessions} />
+          </section>
+        </FadeInContent>
 
 
       </div>
