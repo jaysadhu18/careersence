@@ -1,104 +1,87 @@
-# Careersence
+# CareerSence 🚀
 
-AI-powered career and education guidance platform for students and early-career professionals.
+**AI-Powered Career Planning & Job Hunting Platform**
 
-## Tech stack
+CareerSence is a modern web application designed to help individuals navigate their professional journey using artificial intelligence. Whether you are a student, a recent graduate, or a career switcher, CareerSence provides personalized roadmaps, visual career paths, and job tracking tools to help you succeed.
 
-- **Next.js 16** (App Router)
-- **TypeScript**
-- **Tailwind CSS v4**
-- **PostgreSQL** (Prisma ORM) for user data
-- **NextAuth.js** (Credentials + JWT) for sign in / sign up
+---
 
-## Project structure
+## ✨ Key Features
 
-```
-careersence/
-├── app/
-│   ├── (auth)/           # Auth layout group
-│   │   ├── signin/
-│   │   └── signup/
-│   ├── ai-roadmap/
-│   ├── analyze/
-│   ├── api/              # Public API documentation (static page)
-│   ├── career-quiz/
-│   ├── career-tree/
-│   ├── college-finder/
-│   ├── overview/
-│   ├── job-hunting/
-│   ├── learning-resources/
-│   ├── layout.tsx
-│   └── globals.css
-├── components/
-│   ├── layout/           # Header, Footer, PageShell, OverviewSidebar
-│   ├── ui/               # Button, Input, Select, Checkbox, Textarea, Card, Badge, Tabs, Modal, Toast, Accordion, Progress
-│   ├── domain/           # ResourceCard, RoadmapStepCard, JobCard, CollegeCard, QuizQuestionCard, ProgressHeader
-│   └── providers/        # ToastProvider
-└── lib/
-    ├── utils.ts          # formatDuration, formatDate, formatSalaryRange, cn
-    ├── mock-data.ts      # Sample roadmap, resources, jobs, colleges, quiz results
-    └── hooks/
-        ├── useRoadmap.ts
-        ├── useResources.ts
-        ├── useJobs.ts
-        └── useCollegeSearch.ts
-```
+- **🌳 AI Career Tree**: Generate a visual, interactive representation of potential career paths based on your skills, passions, and goals. Powered by `@xyflow/react` and Framer Motion.
+- **🗺️ Dynamic Roadmaps**: personalized, step-by-step guides to help you reach your career objectives, generated through AI analysis.
+- **💼 Job Hunting & Tracking**: Search for live job listings and track your application status (Saved, Applied, Interviewing, etc.) using integrated job board data.
+- **📝 AI Career Quiz**: A two-phase interactive assessment that analyzes your profile to provide tailored career recommendations.
+- **🌓 Dark Mode Support**: A premium, responsive interface with seamless dark/light mode transitions.
 
-## Design system
+---
 
-- **Primary:** Blue (`--color-primary-*`) for CTAs and highlights
-- **Secondary:** Teal (`--color-secondary-*`) for accents
-- **Surfaces:** White cards, off-white background, soft shadows and rounded corners
-- **Typography:** Inter (sans), Geist Mono (code)
+## 🛠️ Tech Stack
 
-## Authentication & database
+- **Frontend**: [Next.js](https://nextjs.org/) (App Router), [React](https://reactjs.org/), [Tailwind CSS](https://tailwindcss.com/)
+- **State & Flow**: [Framer Motion](https://www.framer.com/motion/), [@xyflow/react](https://reactflow.dev/) (React Flow)
+- **Backend & Database**: [Prisma ORM](https://www.prisma.io/), [PostgreSQL](https://www.postgresql.org/)
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/)
+- **AI Integration**: [Groq API](https://groq.com/) (for roadmap and tree generation)
+- **External APIs**: JSearch Integration for job listings
 
-- **Guests** see only the **landing page** (`/`). Sign in and Sign up are in the header.
-- **After sign in or sign up**, users are redirected to the **main app** (e.g. Overview); all other routes require authentication.
-- User data (email, hashed password, name, role, interests) is stored in **PostgreSQL**.
+---
 
-### Setup PostgreSQL
+## 🚀 Getting Started
 
-1. Install PostgreSQL and create a database (e.g. `careersence`).
-2. Copy `.env.local.example` to `.env.local` and set:
-   - `DATABASE_URL` — e.g. `postgresql://postgres:YOUR_PASSWORD@localhost:5432/careersence?schema=public`
-   - `NEXTAUTH_SECRET` — run `openssl rand -base64 32` and paste the result
-   - `NEXTAUTH_URL` — `http://localhost:3000` for local dev
-3. Run migrations:
+### Prerequisites
+
+- Node.js (v18 or later)
+- PostgreSQL database
+- A Groq API key
+
+### Installation
+
+1. **Clone the repository**:
    ```bash
-   npx prisma migrate deploy
+   git clone https://github.com/jaysadhu18/careersence.git
+   cd careersence
    ```
-4. (Optional) Open Prisma Studio to view data: `npx prisma studio`
 
-## Run locally
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm install
-npm run dev
-```
+3. **Set up Environment Variables**:
+   Create a `.env` file in the root directory and add the following:
+   ```env
+   DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/careersence?schema=public"
+   NEXTAUTH_SECRET=your_nextauth_secret_here
+   NEXTAUTH_URL=http://localhost:3000
+   GROQ_API_KEY=your_groq_api_key_here
+   ```
 
-Open [http://localhost:3000](http://localhost:3000). Sign up or sign in to access Overview, AI Roadmap, and the rest of the app.
+4. **Run Database Migrations**:
+   ```bash
+   npx prisma migrate dev
+   ```
 
-## Build
+5. **Start the Development Server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-npm run build
-npm start
-```
+---
 
-## Routes
+## 📂 Project Structure
 
-| Route | Description |
-|-------|-------------|
-| `/` | Landing page |
-| `/signin` | Sign in form |
-| `/signup` | Sign up with role and interests |
-| `/overview` | Personalized overview with roadmap, quiz, resources, job snapshot |
-| `/career-quiz` | Multi-step quiz with results and “Add to roadmap” |
-| `/ai-roadmap` | Timeline of stages with status and action items |
-| `/learning-resources` | Filterable resource grid (course/article/video) |
-| `/job-hunting` | Saved roles, application tracker, AI assistance |
-| `/college-finder` | Search and shortlist colleges |
-| `/analyze` | Tabs: Resume, Job description, Career comparison |
-| `/api` | Public API documentation |
-| `/career-tree` | Placeholder for career exploration view |
+- `app/`: Next.js App Router pages and API routes.
+- `components/`: Reusable UI components and layout sections.
+  - `domain/`: Business-logic specific components (Tree, Roadmap, etc.).
+  - `ui/`: Base UI elements (Button, Card, Modal, etc.).
+  - `layout/`: Global layout components (Header, Footer, PageShell).
+- `prisma/`: Database schema and migrations.
+- `public/`: Static assets.
+
+---
+
+## 📝 License
+
+This project is licensed under the [MIT License](LICENSE).
