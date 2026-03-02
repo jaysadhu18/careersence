@@ -194,7 +194,8 @@ export async function POST(request: Request) {
                     },
                 });
             }
-        } catch {
+        } catch (dbError) {
+            console.error("Failed to save CareerTree to DB:", dbError);
             // Don't fail the request if DB save fails
         }
 
