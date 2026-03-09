@@ -8,6 +8,7 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { RoadmapHistorySection } from "@/components/domain/RoadmapHistorySection";
 import { QuizHistorySection } from "@/components/domain/QuizHistorySection";
 import { CareerTreeHistorySection } from "@/components/domain/CareerTreeHistorySection";
+import { ResumeAnalysisOverviewSection } from "@/components/domain/ResumeAnalysisOverviewSection";
 import { prisma } from "@/lib/prisma";
 import { FadeInContent } from "@/components/layout/FadeInContent";
 
@@ -48,6 +49,31 @@ export default async function OverviewPage() {
     }
   } catch {
     previousRoadmaps = [];
+  }
+
+  // Fetch the latest Resume Analysis
+  let initialAnalysisData = null;
+  try {
+    if (user?.id) {
+      // @ts-ignore - Prisma types might not have caught up in the IDE yet
+      const latestResumeAnalysis = await prisma.resumeAnalysis.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (latestResumeAnalysis) {
+        initialAnalysisData = {
+          fileName: latestResumeAnalysis.fileName,
+          data: {
+            overallScore: latestResumeAnalysis.overallScore,
+            subScores: JSON.parse(latestResumeAnalysis.subScores),
+            markdownReport: latestResumeAnalysis.markdownReport,
+          }
+        };
+      }
+    }
+  } catch {
+    // Gracefully handle missing table or old schema during transit
   }
 
   // Fetch quiz sessions from DB
@@ -118,6 +144,11 @@ export default async function OverviewPage() {
               </Link>
             </div>
           </Card>
+        </FadeInContent>
+
+        {/* Resume Analysis Dashboard Section */}
+        <FadeInContent delay={0.15}>
+          <ResumeAnalysisOverviewSection initialAnalysis={initialAnalysisData} />
         </FadeInContent>
 
         {/* Career Trees */}

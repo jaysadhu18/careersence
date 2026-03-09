@@ -11,6 +11,11 @@ interface ButtonProps extends HTMLMotionProps<"button"> {
   rightIcon?: ReactNode;
   fullWidth?: boolean;
   asChild?: false;
+  children?: ReactNode;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
+  className?: string;
+  type?: "button" | "submit" | "reset";
 }
 
 const variantClasses = {

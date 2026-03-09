@@ -7,6 +7,7 @@ interface CardProps extends HTMLMotionProps<"div"> {
   children: ReactNode;
   padding?: "none" | "sm" | "md" | "lg";
   hoverable?: boolean;
+  className?: string;
 }
 
 const paddingClasses = {

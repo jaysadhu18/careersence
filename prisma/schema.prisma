@@ -21,6 +21,7 @@ model User {
   savedJobs    SavedJob[]
   quizSessions QuizSession[]
   careerTrees  CareerTree[]
+  resumeAnalyses ResumeAnalysis[]
 }
 
 model Roadmap {
@@ -69,4 +70,15 @@ model CareerTree {
   formInput   String                      // JSON: skills, passions, currentStage, goals
   treeData    String                      // JSON: full CareerTreeData (root + branches)
   createdAt   DateTime @default(now())
+}
+
+model ResumeAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName        String
+  overallScore    Int
+  subScores       String   // JSON: { impact, skills, formatting }
+  markdownReport  String
+  createdAt       DateTime @default(now())
 }
