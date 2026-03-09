@@ -118,7 +118,6 @@ export default async function OverviewPage() {
     <PageShell
       title="Your career overview"
       description="Here's where you stand and what to do next."
-      sidebar={<OverviewSidebar />}
       maxWidth="xl"
     >
       <div className="space-y-8">

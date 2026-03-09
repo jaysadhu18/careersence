@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -25,6 +25,7 @@ import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -82,70 +83,84 @@ type View = "form" | "loading" | "tree";
 
 // ─── Custom Nodes ────────────────────────────────────────────────────────────
 
-const RootNode = ({ data }: { data: { title: string; description: string; skills: string[] } }) => (
-  <div className="node-root group">
-    <Handle type="source" position={Position.Bottom} className="!opacity-0" />
-    <div className="relative z-10 flex flex-col items-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md shadow-inner ring-1 ring-white/20 group-hover:scale-110 transition-transform duration-500">
-        <svg className="h-9 w-9 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      </div>
-      <h3 className="text-xl font-black tracking-tight text-white uppercase">{data.title}</h3>
-      <p className="mt-3 text-[10px] text-white/70 leading-relaxed font-bold uppercase tracking-widest">
-        Starting Point
-      </p>
-      <div className="mt-5 flex flex-wrap justify-center gap-1.5">
-        {data.skills.map((s, i) => (
-          <span key={i} className="rounded-md border border-white/10 bg-white/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-white/90 backdrop-blur-md">
-            {s}
-          </span>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-const MilestoneNode = ({ data }: { data: Milestone & { color: string; onShowDetails: (m: Milestone) => void } }) => (
-  <div
-    className="node-milestone group cursor-pointer"
-    style={{ borderColor: `${data.color}40` }}
-    onClick={() => data.onShowDetails(data)}
-  >
-    <Handle type="target" position={Position.Top} className="!opacity-0" />
-    <Handle type="source" position={Position.Bottom} className="!opacity-0" />
-
-    <div className="flex flex-col items-center">
-      <div
-        className="node-milestone-time"
-        style={{ color: data.color, background: `${data.color}15`, border: `1px solid ${data.color}30` }}
-      >
-        {data.timeframe}
-      </div>
-      <div className="node-milestone-header text-center group-hover:text-white transition-colors">
-        {data.title}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-1 justify-center opacity-60 group-hover:opacity-100 transition-opacity">
-        {data.skills.slice(0, 2).map((s, i) => (
-          <span key={i} className="node-milestone-badge">
-            {s}
-          </span>
-        ))}
-        {data.skills.length > 2 && (
-          <span className="node-milestone-badge">+{data.skills.length - 2}</span>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-[var(--color-primary-400)] opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-        View Details
-        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
+const RootNode = ({ data }: { data: { title: string; description: string; skills: string[] } }) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <div className="node-root group">
+      <Handle type="source" position={Position.Bottom} className="!opacity-0" />
+      <div className="relative z-10 flex flex-col items-center">
+        <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl backdrop-blur-md shadow-inner group-hover:scale-110 transition-transform duration-500 ${isDark ? "bg-white/10 ring-1 ring-white/20" : "bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary-200)]"
+          }`}>
+          <svg className={`h-9 w-9 ${isDark ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-[var(--color-primary-500)]"
+            }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h3 className={`text-xl font-black tracking-tight uppercase ${isDark ? "text-white" : "text-gray-800"}`}>{data.title}</h3>
+        <p className={`mt-3 text-[10px] leading-relaxed font-bold uppercase tracking-widest ${isDark ? "text-white/70" : "text-gray-500"}`}>
+          Starting Point
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-1.5">
+          {data.skills.map((s, i) => (
+            <span key={i} className={`rounded-md border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${isDark
+              ? "border-white/10 bg-white/10 text-white/90"
+              : "border-black/10 bg-black/5 text-gray-700"
+              }`}>
+              {s}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+
+const MilestoneNode = ({ data }: { data: Milestone & { color: string; onShowDetails: (m: Milestone) => void } }) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <div
+      className="node-milestone group cursor-pointer"
+      style={{ borderColor: `${data.color}40` }}
+      onClick={() => data.onShowDetails(data)}
+    >
+      <Handle type="target" position={Position.Top} className="!opacity-0" />
+      <Handle type="source" position={Position.Bottom} className="!opacity-0" />
+
+      <div className="flex flex-col items-center">
+        <div
+          className="node-milestone-time"
+          style={{ color: data.color, background: `${data.color}15`, border: `1px solid ${data.color}30` }}
+        >
+          {data.timeframe}
+        </div>
+        <div className={`node-milestone-header text-center transition-colors ${isDark ? "group-hover:text-white" : "group-hover:text-[var(--color-primary-600)]"
+          }`}>
+          {data.title}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1 justify-center opacity-60 group-hover:opacity-100 transition-opacity">
+          {data.skills.slice(0, 2).map((s, i) => (
+            <span key={i} className="node-milestone-badge">
+              {s}
+            </span>
+          ))}
+          {data.skills.length > 2 && (
+            <span className="node-milestone-badge">+{data.skills.length - 2}</span>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-[var(--color-primary-400)] opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+          View Details
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const nodeTypes = {
   root: RootNode,
@@ -192,6 +207,9 @@ function StepIndicator({ step, total }: { step: number; total: number }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function CareerTreePage() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [view, setView] = useState<View>("form");
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(initialForm);
@@ -201,6 +219,7 @@ export default function CareerTreePage() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const totalSteps = 3;
 
@@ -264,7 +283,7 @@ export default function CareerTreePage() {
             animated: true,
             label: branch.title,
             labelStyle: { fill: branch.color, fontWeight: 900, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.15em" },
-            labelBgStyle: { fill: "#030712", fillOpacity: 0.8, rx: 6 },
+            labelBgStyle: { fill: isDark ? "#030712" : "#ffffff", fillOpacity: isDark ? 0.85 : 0.92, rx: 6 },
             labelBgPadding: [4, 8],
             style: { stroke: branch.color, strokeWidth: 3, opacity: 0.9 },
             markerEnd: {
@@ -323,6 +342,7 @@ export default function CareerTreePage() {
     setNodes([]);
     setEdges([]);
     setError("");
+    setIsFullscreen(false);
   };
 
   // ── Step labels
@@ -332,6 +352,19 @@ export default function CareerTreePage() {
     "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
     "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
   ];
+
+  // Re-apply edge label bg colours when theme toggles
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (edges.length === 0) return;
+    setEdges((prev) =>
+      prev.map((edge) =>
+        edge.labelBgStyle
+          ? { ...edge, labelBgStyle: { ...edge.labelBgStyle, fill: isDark ? "#030712" : "#ffffff", fillOpacity: isDark ? 0.85 : 0.92 } }
+          : edge
+      )
+    );
+  }, [isDark]);
 
   return (
     <PageShell
@@ -534,9 +567,13 @@ export default function CareerTreePage() {
         {view === "tree" && (
           <motion.div
             key="tree-view"
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="h-[800px] w-full relative rounded-[2.5rem] border border-white/5 bg-[#030712] overflow-hidden shadow-2xl"
+            className={
+              isFullscreen
+                ? `fixed inset-0 z-50 ${isDark ? "bg-[#030712]" : "bg-[#f8fafc]"}`
+                : `h-[800px] w-full relative rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl ${isDark ? "bg-[#030712]" : "bg-[#f8fafc]"}`
+            }
           >
             <ReactFlow
               nodes={nodes}
@@ -548,11 +585,35 @@ export default function CareerTreePage() {
               minZoom={0.1}
               maxZoom={2}
             >
-              <Background color="#1f2937" size={1.5} gap={24} variant={"dots" as any} />
-              <Controls className="!bg-black/50 !border-white/10 !rounded-2xl backdrop-blur-xl" />
+              <Background color={isDark ? "#1f2937" : "#cbd5e1"} size={1.5} gap={24} variant={"dots" as any} />
+              <Controls className="!rounded-2xl backdrop-blur-xl" />
 
-              <Panel position="top-right" className="flex gap-3">
-                <Button size="sm" variant="outline" onClick={startOver} className="!rounded-2xl !bg-black/50 !backdrop-blur-xl !border-white/10 text-white">
+              <Panel position="top-right" className="flex gap-2 items-center">
+                {/* Maximize / Minimize toggle */}
+                <button
+                  onClick={() => setIsFullscreen((f) => !f)}
+                  title={isFullscreen ? "Exit full screen" : "Full screen"}
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl border backdrop-blur-xl transition-colors ${isDark
+                    ? "bg-black/50 border-white/10 text-white hover:bg-white/10"
+                    : "bg-white/80 border-black/10 text-gray-700 hover:bg-white"
+                    }`}
+                >
+                  {isFullscreen ? (
+                    /* Minimize icon */
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25M9 15H4.5M9 15v4.5M9 15l-5.25 5.25" />
+                    </svg>
+                  ) : (
+                    /* Maximize icon */
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  )}
+                </button>
+                <Button size="sm" variant="outline" onClick={startOver} className={`!rounded-2xl !backdrop-blur-xl ${isDark ? "!bg-black/50 !border-white/10 text-white" : "!bg-white/80 !border-black/10 text-gray-700"
+                  }`}>
                   Start Over
                 </Button>
                 <Button size="sm" variant="primary" onClick={() => window.print()} className="!rounded-2xl shadow-lg shadow-[var(--color-primary-500)]/40">
@@ -560,12 +621,15 @@ export default function CareerTreePage() {
                 </Button>
               </Panel>
 
-              <Panel position="bottom-left" className="bg-white/5 backdrop-blur-2xl p-6 rounded-[2rem] border border-white/10 max-w-xs shadow-2xl m-6">
-                <h4 className="font-black text-white text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Panel position="bottom-left" className={`backdrop-blur-2xl p-6 rounded-[2rem] border max-w-xs shadow-2xl m-6 ${isDark ? "bg-white/5 border-white/10" : "bg-white/80 border-black/10"
+                }`}>
+                <h4 className={`font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2 ${isDark ? "text-white" : "text-gray-800"
+                  }`}>
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   Navigator
                 </h4>
-                <p className="text-[10px] text-white/50 leading-relaxed font-medium">
+                <p className={`text-[10px] leading-relaxed font-medium ${isDark ? "text-white/50" : "text-gray-500"
+                  }`}>
                   Welcome to your interactive career architecture. Connect with **Root** to see your foundation, or explore the **Branches** to discover your potential. Click any node for detailed action plans.
                 </p>
               </Panel>

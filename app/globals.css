@@ -251,8 +251,10 @@ body {
 }
 
 /* ─── Polished React Flow Tree Styles ─── */
+
+/* Light mode — default */
 .react-flow__background {
-  background: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%);
+  background: radial-gradient(circle at 50% 50%, #f1f5f9 0%, #f8fafc 100%);
 }
 
 .react-flow__node {
@@ -266,20 +268,19 @@ body {
   stroke-width: 2.5;
   stroke: var(--color-border);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.15));
 }
 
 .react-flow__edge-label {
   pointer-events: none;
   font-family: var(--font-outfit), sans-serif;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-.react-flow__edge-label>div {
-  background: rgba(3, 7, 18, 0.8) !important;
+.react-flow__edge-label > div {
+  background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 4px 12px !important;
   border-radius: 8px !important;
 }
@@ -291,20 +292,15 @@ body {
 }
 
 @keyframes edge-flow {
-  from {
-    stroke-dashoffset: 100;
-  }
-
-  to {
-    stroke-dashoffset: 0;
-  }
+  from { stroke-dashoffset: 100; }
+  to   { stroke-dashoffset: 0; }
 }
 
 .react-flow__controls {
-  background: rgba(17, 24, 39, 0.7) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
   border-radius: var(--radius-xl) !important;
   padding: 4px !important;
 }
@@ -312,28 +308,26 @@ body {
 .react-flow__controls-button {
   background: transparent !important;
   border: none !important;
-  color: white !important;
-  fill: white !important;
+  color: #1e293b !important;
+  fill: #1e293b !important;
   border-radius: var(--radius-md) !important;
   transition: all 0.2s ease !important;
 }
 
 .react-flow__controls-button:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(0, 0, 0, 0.07) !important;
   transform: scale(1.1);
 }
 
-/* Custom Node: Root (Glassmorphism + Glow) */
+/* Custom Node: Root — light */
 .node-root {
   min-width: 280px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   padding: 2rem;
   border-radius: 2rem;
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.3),
-    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), inset 0 0 20px rgba(255, 255, 255, 0.6);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -347,49 +341,44 @@ body {
   width: 200%;
   height: 200%;
   background: conic-gradient(from 0deg,
-      transparent,
-      var(--color-primary-500),
-      var(--color-secondary-500),
-      var(--color-primary-500),
-      transparent);
+    transparent,
+    var(--color-primary-500),
+    var(--color-secondary-500),
+    var(--color-primary-500),
+    transparent);
   animation: rotate-glow 10s linear infinite;
-  opacity: 0.15;
+  opacity: 0.12;
 }
 
 @keyframes rotate-glow {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-/* Custom Node: Milestone */
+/* Custom Node: Milestone — light */
 .node-milestone {
   min-width: 220px;
-  background: rgba(17, 24, 39, 0.6);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   padding: 1.25rem;
   border-radius: 1.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .node-milestone:hover {
   transform: translateY(-8px) scale(1.02);
-  background: rgba(17, 24, 39, 0.8);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
 .node-milestone-header {
   font-weight: 800;
   font-size: 0.95rem;
   letter-spacing: -0.02em;
-  color: white;
+  color: #1e293b;
   margin-bottom: 0.35rem;
 }
 
@@ -398,7 +387,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.06);
   padding: 0.25rem 0.6rem;
   border-radius: 2rem;
   display: inline-block;
@@ -406,11 +395,72 @@ body {
 }
 
 .node-milestone-badge {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #475569;
   font-size: 0.65rem;
   font-weight: 600;
   padding: 0.15rem 0.5rem;
   border-radius: 0.5rem;
+}
+
+/* ── Dark mode overrides for the tree ── */
+.dark .react-flow__background {
+  background: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%);
+}
+
+.dark .react-flow__edge-path {
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+}
+
+.dark .react-flow__edge-label > div {
+  background: rgba(3, 7, 18, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .react-flow__controls {
+  background: rgba(17, 24, 39, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .react-flow__controls-button {
+  color: white !important;
+  fill: white !important;
+}
+
+.dark .react-flow__controls-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .node-root {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.dark .node-milestone {
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dark .node-milestone:hover {
+  background: rgba(17, 24, 39, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.dark .node-milestone-header {
+  color: white;
+}
+
+.dark .node-milestone-time {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .node-milestone-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
 }

@@ -329,6 +329,7 @@ export default function JobHuntingPage() {
   const [selectedState, setSelectedState] = useState("");
   const [city, setCity] = useState("");
   const [discovering, setDiscovering] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [discoveredJobs, setDiscoveredJobs] = useState<DiscoveredJob[]>([]);
   const [discoverError, setDiscoverError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -470,6 +471,7 @@ export default function JobHuntingPage() {
     e?.preventDefault();
     setDiscoverError("");
     setDiscovering(true);
+    setHasSearched(true);
     setCurrentPage(1);
     const baseQ = query || "software engineer";
     const expPart = experienceQuery ? ` ${experienceQuery}` : "";
@@ -789,13 +791,24 @@ export default function JobHuntingPage() {
             </div>
           )}
 
-          {/* Results */}
-          {discoveredJobs.length === 0 && !discovering && !discoverError && (
+          {/* Initial state: no search yet */}
+          {!hasSearched && !discovering && !discoverError && (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] py-16 text-center">
               <p className="text-2xl">🔍</p>
               <p className="mt-2 font-medium text-[var(--color-text)]">Search for jobs above</p>
               <p className="text-sm text-[var(--color-text-muted)]">
                 Results are pulled live from Naukri, LinkedIn, Indeed, and more.
+              </p>
+            </div>
+          )}
+
+          {/* Empty state: search completed, no results after filters */}
+          {hasSearched && filteredDiscoveredJobs.length === 0 && !discovering && !discoverError && (
+            <div className="rounded-xl border border-dashed border-[var(--color-border)] py-16 text-center">
+              <p className="text-2xl">📭</p>
+              <p className="mt-2 font-medium text-[var(--color-text)]">No jobs found</p>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                We couldn't find any jobs matching your search criteria. Try adjusting your filters or search terms.
               </p>
             </div>
           )}
