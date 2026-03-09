@@ -20,16 +20,15 @@ export async function GET(request: Request) {
         const url = new URL(JSEARCH_URL);
         url.searchParams.set("query", `${query} in ${location}`);
         url.searchParams.set("page", page);
-        url.searchParams.set("num_pages", "1");
-        url.searchParams.set("date_posted", "month");
+        url.searchParams.set("num_pages", "3");
+        url.searchParams.set("date_posted", "all");
 
         const res = await fetch(url.toString(), {
             headers: {
                 "X-RapidAPI-Key": apiKey,
                 "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
             },
-            // Cache for 10 minutes to reduce API calls
-            next: { revalidate: 600 },
+            cache: "no-store",
         });
 
         if (!res.ok) {
@@ -43,19 +42,48 @@ export async function GET(request: Request) {
         const data = await res.json();
 
         // Normalize the response to a consistent shape
-        const jobs = (data.data ?? []).map((j: Record<string, unknown>) => ({
-            id: j.job_id as string,
-            title: j.job_title as string,
-            company: j.employer_name as string,
-            location: [j.job_city, j.job_state, j.job_country]
-                .filter(Boolean)
-                .join(", "),
-            type: j.job_employment_type as string,
-            description: (j.job_description as string)?.slice(0, 300) + "…",
-            url: j.job_apply_link as string,
-            source: (j.job_publisher as string) ?? "JSearch",
-            postedAt: j.job_posted_at_datetime_utc as string,
-        }));
+        const jobs = (data.data ?? []).map((j: Record<string, unknown>) => {
+            const expData = j.job_required_experience as Record<string, unknown> | null ?? {};
+            const noExpRequired = expData.no_experience_required as boolean | null ?? null;
+            const expMonths = expData.required_experience_in_months as number | null ?? null;
+            const requiredExperienceMonths: number | null =
+                noExpRequired === true ? 0 : expMonths;
+
+            // Try to extract a human-readable experience string from job_highlights.Qualifications
+            // e.g. "4+ years of experience in data analysis"
+            const highlights = j.job_highlights as Record<string, unknown> | null ?? {};
+            const qualifications = (highlights.Qualifications as string[] | null) ?? [];
+            const expKeywords = ["year", "experience", "yr", "yrs"];
+            const experienceText: string | null =
+                qualifications.find((q) =>
+                    expKeywords.some((kw) => q.toLowerCase().includes(kw))
+                ) ??
+                // Fallback: build from months data
+                (noExpRequired === true
+                    ? "Fresher / No experience required"
+                    : expMonths !== null
+                        ? `${Math.round(expMonths / 12)} year${Math.round(expMonths / 12) > 1 ? "s" : ""}`
+                        : null);
+
+            return {
+                id: j.job_id as string,
+                title: j.job_title as string,
+                company: j.employer_name as string,
+                location: [j.job_city, j.job_state, j.job_country]
+                    .filter(Boolean)
+                    .join(", "),
+                type: j.job_employment_type as string,
+                description: (j.job_description as string)?.slice(0, 300) + "…",
+                url: j.job_apply_link as string,
+                source: (j.job_publisher as string) ?? "JSearch",
+                postedAt: j.job_posted_at_datetime_utc as string,
+                requiredExperienceMonths,
+                experienceText,  // human-readable e.g. "4+ years of experience in ML"
+                isRemote: typeof j.job_is_remote === "boolean" ? j.job_is_remote : null,
+            };
+        });
+
+
 
         return NextResponse.json({ jobs });
     } catch (e) {
