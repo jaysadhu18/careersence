@@ -229,6 +229,91 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: "bg-red-100 text-red-700",
 };
 
+// ─── Experience Extractor ────────────────────────────────────────────────────
+
+function extractExperience(job: {
+  requiredExperienceMonths: number | null;
+  experienceText: string | null;
+  description: string;
+}): string {
+  // Priority 1: clean string already extracted from job_highlights.Qualifications
+  if (job.experienceText) {
+    const t = job.experienceText.trim();
+    if (t.toLowerCase() === "fresher / no experience required") return "Fresher";
+    return t;
+  }
+
+  // Priority 2: numeric months from job_required_experience
+  if (job.requiredExperienceMonths !== null) {
+    if (job.requiredExperienceMonths === 0) return "Fresher";
+    const yrs = Math.round(job.requiredExperienceMonths / 12);
+    return `${yrs} year${yrs > 1 ? "s" : ""}`;
+  }
+
+  // Priority 3: regex parse the description
+  const desc = job.description.toLowerCase();
+
+  // Patterns that indicate "preferred" or "optional" — we skip when a required one exists later
+  const preferredRe = /preferred|optional|nice[- ]to[- ]have|bonus/i;
+
+  // Try to find ALL experience mentions and pick the first non-preferred one
+  const patterns: { re: RegExp; fmt: (m: RegExpMatchArray) => string }[] = [
+    // Range: 2-4 years  /  2 to 4 years
+    {
+      re: /(\d+)\s*[-–to]+\s*(\d+)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant\s+)?(?:work\s+)?experience)?/i,
+      fmt: (m) => `${m[1]}-${m[2]} years`,
+    },
+    // Minimum / at least: minimum 5 years / at least 3 years
+    {
+      re: /(?:minimum|at\s+least|min\.?)\s+(\d+)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant\s+)?(?:work\s+)?experience)?/i,
+      fmt: (m) => `${m[1]}+ years`,
+    },
+    // X+ years
+    {
+      re: /(\d+)\+\s*years?(?:\s+of)?(?:\s+(?:relevant\s+)?(?:work\s+)?experience)?/i,
+      fmt: (m) => `${m[1]}+ years`,
+    },
+    // X years of experience
+    {
+      re: /(\d+)\s*years?\s+of(?:\s+(?:relevant\s+)?(?:work\s+)?)?\s*experience/i,
+      fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}`,
+    },
+    // X years experience
+    {
+      re: /(\d+)\s*years?\s+(?:relevant\s+)?(?:work\s+)?experience/i,
+      fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}`,
+    },
+    // experience of X years
+    {
+      re: /experience\s+of\s+(\d+)\+?\s*years?/i,
+      fmt: (m) => `${m[1]}+ years`,
+    },
+  ];
+
+  // Split description into sentences and find first non-preferred mention
+  const sentences = job.description.split(/[.!?\n]/);
+  for (const pat of patterns) {
+    for (const sentence of sentences) {
+      const m = sentence.match(pat.re);
+      if (m) {
+        // Skip if this sentence is marked as preferred/optional and there might be a required one
+        const isPreferred = preferredRe.test(sentence);
+        if (!isPreferred) return pat.fmt(m);
+      }
+    }
+    // If all mentions are preferred, still use the first one found (better than nothing)
+    for (const sentence of sentences) {
+      const m = sentence.match(pat.re);
+      if (m) return pat.fmt(m);
+    }
+  }
+
+  // Fresher keyword
+  if (/fresh(?:er)?|entry[- ]level|no experience required/i.test(desc)) return "Fresher";
+
+  return "Not specified";
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function JobHuntingPage() {
@@ -239,7 +324,7 @@ export default function JobHuntingPage() {
   const [jobDropdownOpen, setJobDropdownOpen] = useState(false);
   const jobInputRef = useRef<HTMLDivElement>(null);
   const [experience, setExperience] = useState("0");
-  const [workMode, setWorkMode] = useState(""); // "" = Any, "remote", "onsite", "hybrid", etc.
+  const [workMode, setWorkMode] = useState("");
   const [country, setCountry] = useState("India");
   const [selectedState, setSelectedState] = useState("");
   const [city, setCity] = useState("");
@@ -273,13 +358,13 @@ export default function JobHuntingPage() {
   // Work mode options
   const WORK_MODE_OPTIONS = [
     { value: "", label: "Any Work Mode" },
-    { value: "remote", label: "🌐 Remote" },
-    { value: "onsite", label: "🏢 On-site" },
-    { value: "hybrid", label: "🔀 Hybrid" },
-    { value: "fulltime", label: "⏰ Full-time" },
-    { value: "parttime", label: "🕐 Part-time" },
-    { value: "contract", label: "📝 Contract" },
-    { value: "internship", label: "🎓 Internship" },
+    { value: "remote", label: " Remote" },
+    { value: "onsite", label: " On-site" },
+    { value: "hybrid", label: " Hybrid" },
+    { value: "fulltime", label: " Full-time" },
+    { value: "parttime", label: " Part-time" },
+    { value: "contract", label: " Contract" },
+    { value: "internship", label: " Internship" },
   ];
 
   // Work mode keyword map (appended to the API search query)
@@ -377,9 +462,8 @@ export default function JobHuntingPage() {
   const cities = getCities(country, selectedState);
 
   // Build location string from selections
-  const locationString = [city, selectedState, country]
-    .filter(Boolean)
-    .join(", ");
+  const locationString = [city, selectedState, country].filter(Boolean).join(", ");
+
 
   // ── Search jobs (fresh search, resets page) ──
   const searchJobs = async (e?: React.FormEvent) => {
@@ -637,9 +721,7 @@ export default function JobHuntingPage() {
                   >
                     <option value="">Select country</option>
                     {countries.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
                 </div>
@@ -651,18 +733,13 @@ export default function JobHuntingPage() {
                   </label>
                   <select
                     value={selectedState}
-                    onChange={(e) => {
-                      setSelectedState(e.target.value);
-                      setCity("");
-                    }}
+                    onChange={(e) => { setSelectedState(e.target.value); setCity(""); }}
                     disabled={!country}
                     className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
                   >
                     <option value="">All states</option>
                     {states.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
+                      <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
                 </div>
@@ -680,9 +757,7 @@ export default function JobHuntingPage() {
                   >
                     <option value="">All cities</option>
                     {cities.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
                 </div>
@@ -767,10 +842,10 @@ export default function JobHuntingPage() {
                   </div>
                 </div>
 
-                {/* Experience — plain text from API */}
+                {/* Experience — extracted intelligently */}
                 <p className="text-xs text-[var(--color-text-muted)]">
                   <span className="font-medium text-[var(--color-text)]">Years of experience needed: </span>
-                  {job.experienceText ?? "Not specified"}
+                  {extractExperience(job)}
                 </p>
 
                 <p className="text-xs text-[var(--color-text-muted)] line-clamp-3">{job.description}</p>
