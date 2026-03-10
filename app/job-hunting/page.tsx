@@ -230,86 +230,62 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 // ─── Experience Extractor ────────────────────────────────────────────────────
+// Server already parsed the full description and stored the result in `experienceText`.
+// This function is a lightweight display layer that formats / falls back cleanly.
 
 function extractExperience(job: {
   requiredExperienceMonths: number | null;
   experienceText: string | null;
   description: string;
 }): string {
-  // Priority 1: clean string already extracted from job_highlights.Qualifications
+  // Priority 1: server-extracted clean string (from qualifications or full description)
   if (job.experienceText) {
     const t = job.experienceText.trim();
-    if (t.toLowerCase() === "fresher / no experience required") return "Fresher";
+    if (/fresher|no experience required/i.test(t)) return "Fresher";
     return t;
   }
 
-  // Priority 2: numeric months from job_required_experience
+  // Priority 2: numeric months from the required_experience field
   if (job.requiredExperienceMonths !== null) {
     if (job.requiredExperienceMonths === 0) return "Fresher";
     const yrs = Math.round(job.requiredExperienceMonths / 12);
     return `${yrs} year${yrs > 1 ? "s" : ""}`;
   }
 
-  // Priority 3: regex parse the description
-  const desc = job.description.toLowerCase();
-
-  // Patterns that indicate "preferred" or "optional" — we skip when a required one exists later
+  // Priority 3: lightweight regex on the (short) display description
   const preferredRe = /preferred|optional|nice[- ]to[- ]have|bonus/i;
+  const sentences = job.description.split(/[.!?\n]+/);
 
-  // Try to find ALL experience mentions and pick the first non-preferred one
   const patterns: { re: RegExp; fmt: (m: RegExpMatchArray) => string }[] = [
-    // Range: 2-4 years  /  2 to 4 years
-    {
-      re: /(\d+)\s*[-–to]+\s*(\d+)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant\s+)?(?:work\s+)?experience)?/i,
-      fmt: (m) => `${m[1]}-${m[2]} years`,
-    },
-    // Minimum / at least: minimum 5 years / at least 3 years
-    {
-      re: /(?:minimum|at\s+least|min\.?)\s+(\d+)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant\s+)?(?:work\s+)?experience)?/i,
-      fmt: (m) => `${m[1]}+ years`,
-    },
+    // Range: "2-4 years" / "2 to 4 years"
+    { re: /(\d+)\s*(?:–|-)\s*(\d+)\+?\s*years?/i, fmt: (m) => `${m[1]}-${m[2]} years` },
+    { re: /(\d+)\s+to\s+(\d+)\+?\s*years?/i, fmt: (m) => `${m[1]}-${m[2]} years` },
+    // Minimum / at least
+    { re: /(?:minimum|at\s+least|min\.?)\s+(\d+)\+?\s*years?/i, fmt: (m) => `${m[1]}+ years` },
     // X+ years
-    {
-      re: /(\d+)\+\s*years?(?:\s+of)?(?:\s+(?:relevant\s+)?(?:work\s+)?experience)?/i,
-      fmt: (m) => `${m[1]}+ years`,
-    },
+    { re: /(\d+)\+\s*years?(?:\s+of)?(?:\s+\w+)?\s*experience/i, fmt: (m) => `${m[1]}+ years` },
     // X years of experience
-    {
-      re: /(\d+)\s*years?\s+of(?:\s+(?:relevant\s+)?(?:work\s+)?)?\s*experience/i,
-      fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}`,
-    },
+    { re: /(\d+)\s*years?\s+of\s+(?:\w+\s+)?experience/i, fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}` },
     // X years experience
-    {
-      re: /(\d+)\s*years?\s+(?:relevant\s+)?(?:work\s+)?experience/i,
-      fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}`,
-    },
-    // experience of X years
-    {
-      re: /experience\s+of\s+(\d+)\+?\s*years?/i,
-      fmt: (m) => `${m[1]}+ years`,
-    },
+    { re: /(\d+)\s*years?\s+(?:\w+\s+)?experience/i, fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}` },
   ];
 
-  // Split description into sentences and find first non-preferred mention
-  const sentences = job.description.split(/[.!?\n]/);
+  // Pass 1 – required mentions only
   for (const pat of patterns) {
-    for (const sentence of sentences) {
-      const m = sentence.match(pat.re);
-      if (m) {
-        // Skip if this sentence is marked as preferred/optional and there might be a required one
-        const isPreferred = preferredRe.test(sentence);
-        if (!isPreferred) return pat.fmt(m);
-      }
+    for (const s of sentences) {
+      const m = s.match(pat.re);
+      if (m && !preferredRe.test(s)) return pat.fmt(m);
     }
-    // If all mentions are preferred, still use the first one found (better than nothing)
-    for (const sentence of sentences) {
-      const m = sentence.match(pat.re);
+  }
+  // Pass 2 – accept preferred if nothing else found
+  for (const pat of patterns) {
+    for (const s of sentences) {
+      const m = s.match(pat.re);
       if (m) return pat.fmt(m);
     }
   }
 
-  // Fresher keyword
-  if (/fresh(?:er)?|entry[- ]level|no experience required/i.test(desc)) return "Fresher";
+  if (/fresh(?:er)?|entry[- ]level|no[\s-]experience\s+required/i.test(job.description)) return "Fresher";
 
   return "Not specified";
 }
@@ -388,16 +364,60 @@ export default function JobHuntingPage() {
     return `${yrs} yr${yrs > 1 ? "s" : ""} exp required`;
   };
 
+  // ── Parse minimum required years from experienceText ──
+  // Returns null → "Not specified" or unknown → job always passes the filter
+  const parseMinRequiredYears = (job: DiscoveredJob): number | null => {
+    const text = job.experienceText?.trim() ?? "";
+
+    // Unknown / "Not specified" → always show
+    if (!text || /not specified/i.test(text)) return null;
+
+    // Fresher / entry level → 0
+    if (/fresher|entry[- ]level|no[\s-]experience/i.test(text)) return 0;
+
+    // "X-Y years" or "X – Y years" → minimum is X
+    const rangeMatch = text.match(/(\d+)\s*[-–]\s*(\d+)\s*year/i);
+    if (rangeMatch) return Number(rangeMatch[1]);
+
+    // "X to Y years" → minimum is X
+    const toMatch = text.match(/(\d+)\s+to\s+(\d+)\s*year/i);
+    if (toMatch) return Number(toMatch[1]);
+
+    // "X+ years"
+    const plusMatch = text.match(/(\d+)\+\s*year/i);
+    if (plusMatch) return Number(plusMatch[1]);
+
+    // "minimum X years" / "at least X years"
+    const minMatch = text.match(/(?:minimum|at\s+least|min\.?)\s+(\d+)/i);
+    if (minMatch) return Number(minMatch[1]);
+
+    // "X years" (plain)
+    const plainMatch = text.match(/(\d+)\s*year/i);
+    if (plainMatch) return Number(plainMatch[1]);
+
+    // Can't determine — show always
+    return null;
+  };
+
   // Client-side filter: experience + work mode
   const filteredDiscoveredJobs = discoveredJobs.filter((job) => {
     // ─ Experience filter ─
     if (experience !== "") {
-      if (job.requiredExperienceMonths !== null) {
-        if (experience === "0" && job.requiredExperienceMonths > 12) return false;
-        if (experience !== "0" && job.requiredExperienceMonths > Number(experience) * 12) return false;
+      const userYears = Number(experience); // 0 = Fresher, 1–30 = years
+      const minRequired = parseMinRequiredYears(job);
+
+      // "Not specified" (null) → always show regardless of selection
+      if (minRequired !== null) {
+        if (userYears === 0) {
+          // Fresher: show jobs requiring 0–2 years (0, 1, or 2 year minimum)
+          if (minRequired > 2) return false;
+        } else {
+          // X years: show jobs where min required ≤ user's experience
+          if (minRequired > userYears) return false;
+        }
       }
     }
-    // ─ Work mode filter ─
+
     if (workMode !== "") {
       if (workMode === "remote") {
         // only show if explicitly remote
@@ -847,10 +867,10 @@ export default function JobHuntingPage() {
                       <span className="rounded-full bg-[var(--color-surface-alt,#f3f4f6)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">{job.type}</span>
                     )}
                     {job.isRemote === true && (
-                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 border border-green-200">🌐 Remote</span>
+                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 border border-green-200">Remote</span>
                     )}
                     {job.isRemote === false && (
-                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">🏢 On-site</span>
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">On-site</span>
                     )}
                   </div>
                 </div>

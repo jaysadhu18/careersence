@@ -2,6 +2,70 @@ import { NextResponse } from "next/server";
 
 const JSEARCH_URL = "https://jsearch.p.rapidapi.com/search";
 
+// ── Server-side experience extractor (runs on the FULL description) ──────────
+function extractExperienceFromText(fullText: string): string | null {
+    if (!fullText) return null;
+
+    const preferredRe = /preferred|optional|nice[- ]to[- ]have|bonus/i;
+    const sentences = fullText.split(/[.!?\n]+/);
+
+    const patterns: { re: RegExp; fmt: (m: RegExpMatchArray) => string }[] = [
+        // Range: "2-4 years"  /  "2 to 4 years"
+        {
+            re: /(\d+)\s*(?:–|-)\s*(\d+)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant\s+|professional\s+|work\s+)?experience)?/i,
+            fmt: (m) => `${m[1]}-${m[2]} years`,
+        },
+        // "X to Y years"
+        {
+            re: /(\d+)\s+to\s+(\d+)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant\s+|professional\s+|work\s+)?experience)?/i,
+            fmt: (m) => `${m[1]}-${m[2]} years`,
+        },
+        // "minimum X years"  /  "at least X years"
+        {
+            re: /(?:minimum|at\s+least|min\.?)\s+(\d+)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant\s+|professional\s+|work\s+)?experience)?/i,
+            fmt: (m) => `${m[1]}+ years`,
+        },
+        // "X+ years"
+        {
+            re: /(\d+)\+\s*years?(?:\s+of)?(?:\s+(?:relevant\s+|professional\s+|work\s+)?experience)?/i,
+            fmt: (m) => `${m[1]}+ years`,
+        },
+        // "X years of experience"
+        {
+            re: /(\d+)\s*years?\s+of(?:\s+(?:relevant\s+|professional\s+|work\s+))?\s*experience/i,
+            fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}`,
+        },
+        // "experience of X years"
+        {
+            re: /experience\s+of\s+(\d+)\+?\s*years?/i,
+            fmt: (m) => `${m[1]}+ years`,
+        },
+        // "X years experience"
+        {
+            re: /(\d+)\s*years?\s+(?:relevant\s+|professional\s+|work\s+)?experience/i,
+            fmt: (m) => `${m[1]} year${Number(m[1]) > 1 ? "s" : ""}`,
+        },
+    ];
+
+    // Pass 1: non-preferred sentences only
+    for (const pat of patterns) {
+        for (const sentence of sentences) {
+            const m = sentence.match(pat.re);
+            if (m && !preferredRe.test(sentence)) return pat.fmt(m);
+        }
+    }
+    // Pass 2 (fallback): accept preferred mentions if nothing else found
+    for (const pat of patterns) {
+        for (const sentence of sentences) {
+            const m = sentence.match(pat.re);
+            if (m) return pat.fmt(m);
+        }
+    }
+
+    if (/fresh(?:er)?|entry[- ]level|no[\s-]experience\s+required/i.test(fullText)) return "Fresher";
+    return null;
+}
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || "software engineer";
@@ -41,7 +105,6 @@ export async function GET(request: Request) {
 
         const data = await res.json();
 
-        // Normalize the response to a consistent shape
         const jobs = (data.data ?? []).map((j: Record<string, unknown>) => {
             const expData = j.job_required_experience as Record<string, unknown> | null ?? {};
             const noExpRequired = expData.no_experience_required as boolean | null ?? null;
@@ -49,21 +112,34 @@ export async function GET(request: Request) {
             const requiredExperienceMonths: number | null =
                 noExpRequired === true ? 0 : expMonths;
 
-            // Try to extract a human-readable experience string from job_highlights.Qualifications
-            // e.g. "4+ years of experience in data analysis"
+            // Full description — used for extraction, then trimmed for payload
+            const fullDescription = (j.job_description as string) ?? "";
+
+            // Highlights qualifications
             const highlights = j.job_highlights as Record<string, unknown> | null ?? {};
             const qualifications = (highlights.Qualifications as string[] | null) ?? [];
+
+            // Priority 1: scan qualifications for an experience bullet
             const expKeywords = ["year", "experience", "yr", "yrs"];
-            const experienceText: string | null =
-                qualifications.find((q) =>
-                    expKeywords.some((kw) => q.toLowerCase().includes(kw))
-                ) ??
-                // Fallback: build from months data
-                (noExpRequired === true
-                    ? "Fresher / No experience required"
+            const fromQualifications = qualifications.find((q) =>
+                expKeywords.some((kw) => q.toLowerCase().includes(kw))
+            ) ?? null;
+
+            // Priority 2: run full-description extraction before truncating
+            const fromDescription = extractExperienceFromText(
+                qualifications.join(" ") + " " + fullDescription
+            );
+
+            // Priority 3: fall back to months data
+            const fromMonths: string | null =
+                noExpRequired === true
+                    ? "Fresher"
                     : expMonths !== null
                         ? `${Math.round(expMonths / 12)} year${Math.round(expMonths / 12) > 1 ? "s" : ""}`
-                        : null);
+                        : null;
+
+            const experienceText: string | null =
+                fromQualifications ?? fromDescription ?? fromMonths ?? null;
 
             return {
                 id: j.job_id as string,
@@ -73,17 +149,16 @@ export async function GET(request: Request) {
                     .filter(Boolean)
                     .join(", "),
                 type: j.job_employment_type as string,
-                description: (j.job_description as string)?.slice(0, 300) + "…",
+                // Keep display description short; extraction already done above
+                description: fullDescription.slice(0, 400) + (fullDescription.length > 400 ? "…" : ""),
                 url: j.job_apply_link as string,
                 source: (j.job_publisher as string) ?? "JSearch",
                 postedAt: j.job_posted_at_datetime_utc as string,
                 requiredExperienceMonths,
-                experienceText,  // human-readable e.g. "4+ years of experience in ML"
+                experienceText,
                 isRemote: typeof j.job_is_remote === "boolean" ? j.job_is_remote : null,
             };
         });
-
-
 
         return NextResponse.json({ jobs });
     } catch (e) {
@@ -94,3 +169,4 @@ export async function GET(request: Request) {
         );
     }
 }
+
