@@ -84,17 +84,41 @@ interface ResumeAnalysisPayload {
   markdownReport: string;
 }
 
+interface CareerData {
+  career_name: string;
+  description: string;
+  average_salary_india: string;
+  required_education: string[];
+  key_skills: string[];
+  job_demand_score: number;
+  work_life_balance: number;
+  difficulty_to_enter: string;
+  automation_risk: string;
+  remote_work_possibility: string;
+  career_growth_path: string[];
+  top_industries: string[];
+}
+
 export default function AnalyzePage() {
   const [resumeAnalysisData, setResumeAnalysisData] = useState<ResumeAnalysisPayload | null>(null);
   const [jobText, setJobText] = useState("");
   const [careerA, setCareerA] = useState("");
   const [careerB, setCareerB] = useState("");
+  const [careerComparison, setCareerComparison] = useState<CareerData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [parsingFile, setParsingFile] = useState(false);
   const [result, setResult] = useState<"resume" | "job" | "career" | null>(null);
   const [activeTab, setActiveTab] = useState("resume");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Clear career comparison on page load/refresh
+  useEffect(() => {
+    setCareerComparison(null);
+    setResult(null);
+    setCareerA("");
+    setCareerB("");
+  }, []);
 
   // Load from local storage on mount
   useEffect(() => {
@@ -196,11 +220,63 @@ export default function AnalyzePage() {
 
 
   const runAnalysis = async (type: "resume" | "job" | "career") => {
-    setLoading(true);
-    setResult(null);
-    await new Promise((r) => setTimeout(r, 1500));
-    setResult(type);
-    setLoading(false);
+    if (type === "career") {
+      // Validate career inputs
+      const careerAClean = careerA.trim();
+      const careerBClean = careerB.trim();
+
+      // Check if inputs are too short or look random
+      if (careerAClean.length < 3 || careerBClean.length < 3) {
+        setErrorMessage("Please enter valid career names (at least 3 characters).");
+        return;
+      }
+
+      // Check for random/gibberish input (no vowels or too many special characters)
+      const hasVowels = (str: string) => /[aeiou]/i.test(str);
+      const hasSpecialChars = (str: string) => /[^a-zA-Z\s]/.test(str);
+      
+      if (!hasVowels(careerAClean) || !hasVowels(careerBClean)) {
+        setErrorMessage("Please enter valid career names (e.g., Software Engineer, Data Scientist).");
+        return;
+      }
+
+      if (hasSpecialChars(careerAClean) || hasSpecialChars(careerBClean)) {
+        setErrorMessage("Career names should only contain letters and spaces.");
+        return;
+      }
+
+      setLoading(true);
+      setResult(null);
+      setCareerComparison(null);
+      setErrorMessage(null);
+
+      try {
+        const response = await fetch("/api/compare-careers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ careers: [careerAClean, careerBClean] }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to compare careers");
+        }
+
+        const data = await response.json();
+        setCareerComparison(data.comparison.career_comparison);
+        setResult("career");
+      } catch (error: any) {
+        setErrorMessage(error.message || "Error comparing careers. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setLoading(true);
+      setResult(null);
+      await new Promise((r) => setTimeout(r, 1500));
+      setResult(type);
+      setLoading(false);
+    }
   };
 
   return (
@@ -363,6 +439,26 @@ export default function AnalyzePage() {
         </TabsContent>
 
         <TabsContent value="career">
+          <Modal
+            open={!!errorMessage && activeTab === "career"}
+            onClose={() => setErrorMessage(null)}
+            title="Invalid Input"
+            size="sm"
+          >
+            <div className="flex flex-col items-center gap-4 text-center py-2">
+              <div className="rounded-full bg-red-100 p-3 dark:bg-red-900/30">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                {errorMessage}
+              </p>
+              <Button variant="primary" onClick={() => setErrorMessage(null)} className="mt-4 w-full">
+                Understood
+              </Button>
+            </div>
+          </Modal>
           <Card padding="lg" className="mb-6">
             <h3 className="mb-2 font-semibold text-[var(--color-text)]">
               Compare two career paths
@@ -399,33 +495,250 @@ export default function AnalyzePage() {
               Compare careers
             </Button>
           </Card>
-          {result === "career" && (
-            <Card padding="lg">
-              <h3 className="mb-4 font-semibold text-[var(--color-text)]">
-                Comparison summary
-              </h3>
-              <p className="text-[var(--color-text-muted)]">
-                {mockAnalysis.career.summary}
-              </p>
-              <table className="mt-4 w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--color-border)]">
-                    <th className="py-2 font-medium">Dimension</th>
-                    <th className="py-2 font-medium">Career A</th>
-                    <th className="py-2 font-medium">Career B</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockAnalysis.career.comparison.map((row, i) => (
-                    <tr key={i} className="border-b border-[var(--color-border)]">
-                      <td className="py-2">{row.dimension}</td>
-                      <td className="py-2">{row.A}</td>
-                      <td className="py-2">{row.B}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
+          {result === "career" && careerComparison && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card padding="lg">
+                <h3 className="mb-6 text-2xl font-bold text-[var(--color-text)] text-center">
+                  {careerComparison[0]?.career_name} vs {careerComparison[1]?.career_name}
+                </h3>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b-2 border-[var(--color-primary-500)]">
+                        <th className="py-4 px-4 font-semibold text-[var(--color-text)] w-1/4">Criteria</th>
+                        <th className="py-4 px-4 font-semibold text-[var(--color-text)] w-3/8">
+                          {careerComparison[0]?.career_name}
+                        </th>
+                        <th className="py-4 px-4 font-semibold text-[var(--color-text)] w-3/8">
+                          {careerComparison[1]?.career_name}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Description */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Description</td>
+                        <td className="py-4 px-4 text-sm text-[var(--color-text-muted)]">
+                          {careerComparison[0]?.description}
+                        </td>
+                        <td className="py-4 px-4 text-sm text-[var(--color-text-muted)]">
+                          {careerComparison[1]?.description}
+                        </td>
+                      </tr>
+
+                      {/* Salary */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Average Salary (India)</td>
+                        <td className="py-4 px-4">
+                          <span className="text-lg font-bold text-[var(--color-primary-600)] dark:text-[var(--color-primary-400)]">
+                            {careerComparison[0]?.average_salary_india}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                            {careerComparison[1]?.average_salary_india}
+                          </span>
+                        </td>
+                      </tr>
+
+                      {/* Job Demand */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Job Demand Score</td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-[var(--color-primary-500)] rounded-full"
+                                style={{ width: `${careerComparison[0]?.job_demand_score}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-semibold text-[var(--color-text)]">
+                              {careerComparison[0]?.job_demand_score}/100
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-500 rounded-full"
+                                style={{ width: `${careerComparison[1]?.job_demand_score}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-semibold text-[var(--color-text)]">
+                              {careerComparison[1]?.job_demand_score}/100
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Work-Life Balance */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Work-Life Balance</td>
+                        <td className="py-4 px-4">
+                          <span className="text-lg">{"⭐".repeat(careerComparison[0]?.work_life_balance)}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="text-lg">{"⭐".repeat(careerComparison[1]?.work_life_balance)}</span>
+                        </td>
+                      </tr>
+
+                      {/* Difficulty */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Difficulty to Enter</td>
+                        <td className="py-4 px-4">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded ${careerComparison[0]?.difficulty_to_enter === 'Low' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                              careerComparison[0]?.difficulty_to_enter === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            }`}>{careerComparison[0]?.difficulty_to_enter}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded ${careerComparison[1]?.difficulty_to_enter === 'Low' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                              careerComparison[1]?.difficulty_to_enter === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            }`}>{careerComparison[1]?.difficulty_to_enter}</span>
+                        </td>
+                      </tr>
+
+                      {/* Automation Risk */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Automation Risk</td>
+                        <td className="py-4 px-4">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded ${careerComparison[0]?.automation_risk === 'Low' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                              careerComparison[0]?.automation_risk === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            }`}>{careerComparison[0]?.automation_risk}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded ${careerComparison[1]?.automation_risk === 'Low' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                              careerComparison[1]?.automation_risk === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            }`}>{careerComparison[1]?.automation_risk}</span>
+                        </td>
+                      </tr>
+
+                      {/* Remote Work */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Remote Work</td>
+                        <td className="py-4 px-4">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${careerComparison[0]?.remote_work_possibility === 'Yes'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                            }`}>{careerComparison[0]?.remote_work_possibility}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${careerComparison[1]?.remote_work_possibility === 'Yes'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                            }`}>{careerComparison[1]?.remote_work_possibility}</span>
+                        </td>
+                      </tr>
+
+                      {/* Education */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Required Education</td>
+                        <td className="py-4 px-4">
+                          <ul className="space-y-1">
+                            {careerComparison[0]?.required_education.map((edu, i) => (
+                              <li key={i} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
+                                <span className="text-[var(--color-primary-500)]">•</span>
+                                {edu}
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
+                        <td className="py-4 px-4">
+                          <ul className="space-y-1">
+                            {careerComparison[1]?.required_education.map((edu, i) => (
+                              <li key={i} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
+                                <span className="text-blue-500">•</span>
+                                {edu}
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
+                      </tr>
+
+                      {/* Skills */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Key Skills</td>
+                        <td className="py-4 px-4">
+                          <div className="flex flex-wrap gap-2">
+                            {careerComparison[0]?.key_skills.map((skill, i) => (
+                              <span key={i} className="text-xs px-2 py-1 bg-[var(--color-primary-100)] dark:bg-[var(--color-primary-900)]/30 text-[var(--color-primary-700)] dark:text-[var(--color-primary-400)] rounded font-medium">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex flex-wrap gap-2">
+                            {careerComparison[1]?.key_skills.map((skill, i) => (
+                              <span key={i} className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-medium">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Career Growth */}
+                      <tr className="border-b border-[var(--color-border)]">
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Career Growth Path</td>
+                        <td className="py-4 px-4">
+                          <ol className="space-y-1.5">
+                            {careerComparison[0]?.career_growth_path.map((step, i) => (
+                              <li key={i} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
+                                <span className="font-semibold text-[var(--color-primary-600)]">{i + 1}.</span>
+                                {step}
+                              </li>
+                            ))}
+                          </ol>
+                        </td>
+                        <td className="py-4 px-4">
+                          <ol className="space-y-1.5">
+                            {careerComparison[1]?.career_growth_path.map((step, i) => (
+                              <li key={i} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
+                                <span className="font-semibold text-blue-600">{i + 1}.</span>
+                                {step}
+                              </li>
+                            ))}
+                          </ol>
+                        </td>
+                      </tr>
+
+                      {/* Industries */}
+                      <tr>
+                        <td className="py-4 px-4 font-medium text-[var(--color-text)]">Top Industries</td>
+                        <td className="py-4 px-4">
+                          <div className="flex flex-wrap gap-2">
+                            {careerComparison[0]?.top_industries.map((industry, i) => (
+                              <span key={i} className="text-xs px-2 py-1 bg-[var(--color-primary-200)] dark:bg-[var(--color-primary-800)] text-[var(--color-primary-700)] dark:text-[var(--color-primary-300)] rounded font-medium">
+                                {industry}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex flex-wrap gap-2">
+                            {careerComparison[1]?.top_industries.map((industry, i) => (
+                              <span key={i} className="text-xs px-2 py-1 bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded font-medium">
+                                {industry}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </motion.div>
           )}
         </TabsContent>
       </Tabs>
