@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { getCountries, getStates, getCities } from "@/lib/location-data";
 
 // ─── Job Titles / Keywords List ───────────────────────────────────────────────
 
@@ -304,6 +303,20 @@ export default function JobHuntingPage() {
   const [country, setCountry] = useState("India");
   const [selectedState, setSelectedState] = useState("");
   const [city, setCity] = useState("");
+  // Searchable location fields
+  const [countryQuery, setCountryQuery] = useState("India");
+  const [stateQuery, setStateQuery] = useState("");
+  const [cityQuery, setCityQuery] = useState("");
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [stateOpen, setStateOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [experienceOpen, setExperienceOpen] = useState(false);
+  const [workModeOpen, setWorkModeOpen] = useState(false);
+  const countryRef = useRef<HTMLDivElement>(null);
+  const stateRef = useRef<HTMLDivElement>(null);
+  const cityRef = useRef<HTMLDivElement>(null);
+  const experienceRef = useRef<HTMLDivElement>(null);
+  const workModeRef = useRef<HTMLDivElement>(null);
   const [discovering, setDiscovering] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [discoveredJobs, setDiscoveredJobs] = useState<DiscoveredJob[]>([]);
@@ -437,6 +450,32 @@ export default function JobHuntingPage() {
     }
     return true;
   });
+  // Close location dropdowns on outside click — restore display value on close
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (countryRef.current && !countryRef.current.contains(e.target as Node)) {
+        setCountryOpen(false);
+        setCountryQuery(country); // restore to selected value
+      }
+      if (stateRef.current && !stateRef.current.contains(e.target as Node)) {
+        setStateOpen(false);
+        setStateQuery(selectedState); // restore to selected value
+      }
+      if (cityRef.current && !cityRef.current.contains(e.target as Node)) {
+        setCityOpen(false);
+        setCityQuery(city); // restore to selected value
+      }
+      if (experienceRef.current && !experienceRef.current.contains(e.target as Node)) {
+        setExperienceOpen(false);
+      }
+      if (workModeRef.current && !workModeRef.current.contains(e.target as Node)) {
+        setWorkModeOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [country, selectedState, city]);
+
   // Close job dropdown on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -477,10 +516,42 @@ export default function JobHuntingPage() {
     loadSavedJobs();
   }, [loadSavedJobs]);
 
-  // ── Derived location lists ──
-  const countries = getCountries();
-  const states = getStates(country);
-  const cities = getCities(country, selectedState);
+  // ── Remote location lists (fetched from API) ──
+  const [countries, setCountries] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+
+  // Fetch countries on mount
+  useEffect(() => {
+    fetch("/api/locations?type=countries")
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCountries(data); })
+      .catch(console.error);
+  }, []);
+
+  // Fetch states when country changes
+  useEffect(() => {
+    if (!country) {
+      setStates([]);
+      return;
+    }
+    fetch(`/api/locations?type=states&country=${encodeURIComponent(country)}`)
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setStates(data); })
+      .catch(console.error);
+  }, [country]);
+
+  // Fetch cities when country or state changes
+  useEffect(() => {
+    if (!country || !selectedState) {
+      setCities([]);
+      return;
+    }
+    fetch(`/api/locations?type=cities&country=${encodeURIComponent(country)}&state=${encodeURIComponent(selectedState)}`)
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCities(data); })
+      .catch(console.error);
+  }, [country, selectedState]);
 
   // Build location string from selections
   const locationString = [city, selectedState, country].filter(Boolean).join(", ");
@@ -506,7 +577,11 @@ export default function JobHuntingPage() {
       const res = await fetch(`/api/jobs/search?${params}`);
       const data = await res.json();
       if (!res.ok) {
-        setDiscoverError(data.error || "Failed to fetch jobs.");
+        if (res.status === 429) {
+          setDiscoverError("API Rate Limit Reached: You are searching too fast or have reached your JSearch monthly quota. Please wait a minute and try again.");
+        } else {
+          setDiscoverError(data.error || "Failed to fetch jobs.");
+        }
         return;
       }
       const jobs = data.jobs ?? [];
@@ -647,141 +722,234 @@ export default function JobHuntingPage() {
           {/* Search form */}
           <Card padding="md">
             <form onSubmit={searchJobs} className="space-y-4">
-              {/* Row 1: Job title searchable dropdown */}
-              <div ref={jobInputRef} className="relative">
-                <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
-                  Job title or keywords
-                </label>
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => { setQuery(e.target.value); setJobDropdownOpen(e.target.value.trim().length > 0); }}
-                  onFocus={() => { if (query.trim().length > 0) setJobDropdownOpen(true); }}
-                  placeholder="e.g. Software Engineer, Data Analyst"
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
-                />
-                {jobDropdownOpen && (
-                  <div className="absolute z-30 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg max-h-60 overflow-y-auto">
-                    {/* Custom query option if typed something not in list */}
-                    {query.trim() && !JOB_TITLES.some((t) => t.toLowerCase() === query.toLowerCase()) && (
-                      <button
-                        type="button"
-                        onMouseDown={() => { setJobDropdownOpen(false); }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)] border-b border-[var(--color-border)]"
-                      >
-                        <span>🔍</span>
-                        <span>Search for &ldquo;<strong>{query}</strong>&rdquo;</span>
-                      </button>
-                    )}
-                    {filteredTitles.length > 0 ? (
-                      filteredTitles.map((title, idx) => (
-                        <button
-                          key={`${idx}-${title}`}
-                          type="button"
-                          onMouseDown={() => { setQuery(title); setJobDropdownOpen(false); }}
-                          className="w-full px-3 py-2 text-left text-sm text-[var(--color-text)] hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-600)] transition-colors"
-                        >
-                          {title}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="px-3 py-3 text-sm text-[var(--color-text-muted)]">No matches — press Search to use your query.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Row 1.5: Experience dropdown */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
-                  Experience
-                </label>
-                <select
-                  value={experience}
-                  onChange={(e) => setExperience(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
-                >
-                  {EXPERIENCE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Work Mode dropdown */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
-                  Work Mode
-                </label>
-                <select
-                  value={workMode}
-                  onChange={(e) => setWorkMode(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
-                >
-                  {WORK_MODE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Row 2: Location dropdowns */}
-              <div className="flex flex-wrap gap-3">
-                {/* Country */}
-                <div className="flex-1 min-w-[160px]">
+              {/* Row 1: Job title + Experience + Work Mode on one line */}
+              <div className="flex flex-wrap gap-3 items-end">
+                {/* Job title searchable dropdown — grows wider */}
+                <div ref={jobInputRef} className="relative flex-1 min-w-[160px]">
                   <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
-                    Country
+                    Job title or keywords
                   </label>
-                  <select
-                    value={country}
-                    onChange={(e) => {
-                      setCountry(e.target.value);
-                      setSelectedState("");
-                      setCity("");
-                    }}
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => { setQuery(e.target.value); setJobDropdownOpen(e.target.value.trim().length > 0); }}
+                    onFocus={() => { if (query.trim().length > 0) setJobDropdownOpen(true); }}
+                    placeholder="e.g. Software Engineer, Data Analyst"
                     className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
+                  />
+                  {jobDropdownOpen && (
+                    <div className="absolute z-30 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg max-h-60 overflow-y-auto">
+                      {/* Custom query option if typed something not in list */}
+                      {query.trim() && !JOB_TITLES.some((t) => t.toLowerCase() === query.toLowerCase()) && (
+                        <button
+                          type="button"
+                          onMouseDown={() => { setJobDropdownOpen(false); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)] border-b border-[var(--color-border)]"
+                        >
+                          <span>🔍</span>
+                          <span>Search for &ldquo;<strong>{query}</strong>&rdquo;</span>
+                        </button>
+                      )}
+                      {filteredTitles.length > 0 ? (
+                        filteredTitles.map((title, idx) => (
+                          <button
+                            key={`${idx}-${title}`}
+                            type="button"
+                            onMouseDown={() => { setQuery(title); setJobDropdownOpen(false); }}
+                            className="w-full px-3 py-2 text-left text-sm text-[var(--color-text)] hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-600)] transition-colors"
+                          >
+                            {title}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-3 text-sm text-[var(--color-text-muted)]">No matches — press Search to use your query.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Experience */}
+                <div ref={experienceRef} className="relative flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
+                    Experience
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setExperienceOpen(!experienceOpen)}
+                    className="flex w-full items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
                   >
-                    <option value="">Select country</option>
-                    {countries.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                    <span className="truncate">
+                      {EXPERIENCE_OPTIONS.find((opt) => opt.value === experience)?.label || "Fresher"}
+                    </span>
+                    <svg className="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </button>
+                  {experienceOpen && (
+                    <div className="absolute z-30 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg max-h-52 overflow-y-auto">
+                      {EXPERIENCE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onMouseDown={() => {
+                            setExperience(opt.value);
+                            setExperienceOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-600)] transition-colors ${opt.value === experience ? "font-semibold text-[var(--color-primary-600)]" : "text-[var(--color-text)]"
+                            }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Work Mode */}
+                <div ref={workModeRef} className="relative flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
+                    Work Mode
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setWorkModeOpen(!workModeOpen)}
+                    className="flex w-full items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
+                  >
+                    <span className="truncate">
+                      {WORK_MODE_OPTIONS.find((opt) => opt.value === workMode)?.label || "Any Work Mode"}
+                    </span>
+                    <svg className="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </button>
+                  {workModeOpen && (
+                    <div className="absolute z-30 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg max-h-52 overflow-y-auto">
+                      {WORK_MODE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onMouseDown={() => {
+                            setWorkMode(opt.value);
+                            setWorkModeOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-600)] transition-colors ${opt.value === workMode ? "font-semibold text-[var(--color-primary-600)]" : "text-[var(--color-text)]"
+                            }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 2: Location — searchable typeaheads */}
+              <div className="flex flex-wrap gap-3">
+
+                {/* Country */}
+                <div ref={countryRef} className="relative flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">Country</label>
+                  <input
+                    type="text"
+                    value={countryQuery}
+                    onChange={(e) => { setCountryQuery(e.target.value); setCountryOpen(true); }}
+                    onFocus={() => { setCountryQuery(""); setCountryOpen(true); }}
+                    placeholder="Search country…"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
+                  />
+                  {countryOpen && (
+                    <div className="absolute z-30 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg max-h-52 overflow-y-auto">
+                      {countries
+                        .filter((c) => c.toLowerCase().includes(countryQuery.toLowerCase()))
+                        .map((c) => (
+                          <button key={c} type="button"
+                            onMouseDown={() => {
+                              setCountry(c); setCountryQuery(c);
+                              setSelectedState(""); setStateQuery("");
+                              setCity(""); setCityQuery("");
+                              setCountryOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-600)] transition-colors ${c === country ? "font-semibold text-[var(--color-primary-600)]" : "text-[var(--color-text)]"
+                              }`}
+                          >{c}</button>
+                        ))}
+                      {countries.filter((c) => c.toLowerCase().includes(countryQuery.toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No countries found</p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* State */}
-                <div className="flex-1 min-w-[160px]">
-                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
-                    State / Region
-                  </label>
-                  <select
-                    value={selectedState}
-                    onChange={(e) => { setSelectedState(e.target.value); setCity(""); }}
+                <div ref={stateRef} className="relative flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">State / Region</label>
+                  <input
+                    type="text"
+                    value={stateQuery}
+                    onChange={(e) => { setStateQuery(e.target.value); setStateOpen(true); }}
+                    onFocus={() => { if (country) { setStateQuery(""); setStateOpen(true); } }}
                     disabled={!country}
+                    placeholder={country ? "Search state…" : "Select country first"}
                     className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
-                  >
-                    <option value="">All states</option>
-                    {states.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
+                  />
+                  {stateOpen && country && (
+                    <div className="absolute z-30 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg max-h-52 overflow-y-auto">
+                      {stateQuery === "" && (
+                        <button type="button"
+                          onMouseDown={() => { setSelectedState(""); setStateQuery(""); setCity(""); setCityQuery(""); setStateOpen(false); }}
+                          className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-primary-50)] border-b border-[var(--color-border)]"
+                        >All states</button>
+                      )}
+                      {states
+                        .filter((s) => s.toLowerCase().includes(stateQuery.toLowerCase()))
+                        .map((s) => (
+                          <button key={s} type="button"
+                            onMouseDown={() => {
+                              setSelectedState(s); setStateQuery(s);
+                              setCity(""); setCityQuery("");
+                              setStateOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-600)] transition-colors ${s === selectedState ? "font-semibold text-[var(--color-primary-600)]" : "text-[var(--color-text)]"
+                              }`}
+                          >{s}</button>
+                        ))}
+                      {states.filter((s) => s.toLowerCase().includes(stateQuery.toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No states found</p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* City */}
-                <div className="flex-1 min-w-[160px]">
-                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">
-                    City
-                  </label>
-                  <select
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
+                <div ref={cityRef} className="relative flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">City</label>
+                  <input
+                    type="text"
+                    value={cityQuery}
+                    onChange={(e) => { setCityQuery(e.target.value); setCityOpen(true); }}
+                    onFocus={() => { if (selectedState) { setCityQuery(""); setCityOpen(true); } }}
                     disabled={!selectedState}
+                    placeholder={selectedState ? "Search city…" : "Select state first"}
                     className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
-                  >
-                    <option value="">All cities</option>
-                    {cities.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                  />
+                  {cityOpen && selectedState && (
+                    <div className="absolute z-30 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg max-h-52 overflow-y-auto">
+                      {cityQuery === "" && (
+                        <button type="button"
+                          onMouseDown={() => { setCity(""); setCityQuery(""); setCityOpen(false); }}
+                          className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-primary-50)] border-b border-[var(--color-border)]"
+                        >All cities</button>
+                      )}
+                      {cities
+                        .filter((c) => c.toLowerCase().includes(cityQuery.toLowerCase()))
+                        .map((c) => (
+                          <button key={c} type="button"
+                            onMouseDown={() => { setCity(c); setCityQuery(c); setCityOpen(false); }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-600)] transition-colors ${c === city ? "font-semibold text-[var(--color-primary-600)]" : "text-[var(--color-text)]"
+                              }`}
+                          >{c}</button>
+                        ))}
+                      {cities.filter((c) => c.toLowerCase().includes(cityQuery.toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No cities found</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
