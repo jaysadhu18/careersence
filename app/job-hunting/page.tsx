@@ -577,7 +577,11 @@ export default function JobHuntingPage() {
       const res = await fetch(`/api/jobs/search?${params}`);
       const data = await res.json();
       if (!res.ok) {
-        setDiscoverError(data.error || "Failed to fetch jobs.");
+        if (res.status === 429) {
+          setDiscoverError("API Rate Limit Reached: You are searching too fast or have reached your JSearch monthly quota. Please wait a minute and try again.");
+        } else {
+          setDiscoverError(data.error || "Failed to fetch jobs.");
+        }
         return;
       }
       const jobs = data.jobs ?? [];
