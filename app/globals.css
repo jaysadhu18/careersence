@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  /* Text specific to Analyze page requirements */
+  --color-text-strong: #000000;
+
   /* Primary: calm, trustworthy blue */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
@@ -54,6 +57,8 @@
 
 /* ─── Dark-mode overrides ─── */
 .dark {
+  --color-text-strong: #ffffff;
+
   --color-primary-50: #0f1a2e;
   --color-primary-100: #132952;
   --color-primary-700: #93c5fd;
@@ -277,7 +282,7 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-.react-flow__edge-label > div {
+.react-flow__edge-label>div {
   background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(4px);
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -292,8 +297,13 @@ body {
 }
 
 @keyframes edge-flow {
-  from { stroke-dashoffset: 100; }
-  to   { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .react-flow__controls {
@@ -341,18 +351,23 @@ body {
   width: 200%;
   height: 200%;
   background: conic-gradient(from 0deg,
-    transparent,
-    var(--color-primary-500),
-    var(--color-secondary-500),
-    var(--color-primary-500),
-    transparent);
+      transparent,
+      var(--color-primary-500),
+      var(--color-secondary-500),
+      var(--color-primary-500),
+      transparent);
   animation: rotate-glow 10s linear infinite;
   opacity: 0.12;
 }
 
 @keyframes rotate-glow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Custom Node: Milestone — light */
@@ -413,7 +428,7 @@ body {
   filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
 }
 
-.dark .react-flow__edge-label > div {
+.dark .react-flow__edge-label>div {
   background: rgba(3, 7, 18, 0.8) !important;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }

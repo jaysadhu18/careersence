@@ -258,24 +258,24 @@ export default function CollegeFinderPage() {
           )}
 
           {!loading && colleges.length > 0 && (
-          <div className="space-y-4">
-            {colleges.map((c) => (
-              <CollegeCard
-                key={c.id}
-                college={c}
-                onSave={() => addToShortlist(c.id)}
-                onRemove={() => removeFromShortlist(c.id)}
-                isShortlisted={shortlist.includes(c.id)}
-              />
-            ))}
-            {hasMore && (
-              <div className="flex justify-center pt-4">
-                <Button variant="outline" onClick={handleLoadMore} loading={loadingMore}>
-                  Load more colleges
-                </Button>
-              </div>
-            )}
-          </div>
+            <div className="space-y-4">
+              {colleges.map((c) => (
+                <CollegeCard
+                  key={c.id}
+                  college={c}
+                  onSave={() => addToShortlist(c.id)}
+                  onRemove={() => removeFromShortlist(c.id)}
+                  isShortlisted={shortlist.includes(c.id)}
+                />
+              ))}
+              {hasMore && (
+                <div className="flex justify-center pt-4">
+                  <Button variant="outline" onClick={handleLoadMore} loading={loadingMore}>
+                    Load more colleges
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </div>
         <div>

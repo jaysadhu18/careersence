@@ -7,7 +7,7 @@ Here are the most impactful ways you can implement ML and NLP techniques into Ca
 1. Advanced NLP for Intelligent Resume Parsing (Named Entity Recognition)
 Right now, you use pdf-parse and mammoth to extract raw text (in /api/parse-resume), which is great, but raw text can be messy.
 
-The Implementation: You can implement an NLP pipeline using Named Entity Recognition (NER) (via tools like SpaCy or Hugging Face BERT base models).
+The Implementation: You can implement an NLP pipeline using Named Entity Recognition (NER) (via tools like SpaCy ).
 How it works: Instead of just grabbing text, the NLP model automatically tags and extracts structurally sound data segments—separating “Skills”, “Years of Experience”, “Job Titles”, and “Education Degrees” into clean JSON objects.
 The Benefit: It accurately structures the user's background precisely before you send it to Groq or save it to your PostgreSQL database, saving tokens, preventing hallucinations, and making the data searchable.
 2. Job Match Scoring & Similarity Engine (NLP Embeddings & ML)

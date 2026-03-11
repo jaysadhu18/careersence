@@ -141,11 +141,10 @@ export function RoadmapStepCard({
               key={s}
               type="button"
               onClick={() => onStatusChange(s)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-medium transition-all ${
-                stage.status === s
+              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-medium transition-all ${stage.status === s
                   ? statusConfig[s].className + " border-current"
                   : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
-              }`}
+                }`}
             >
               {statusConfig[s].icon}
               {statusConfig[s].label}
