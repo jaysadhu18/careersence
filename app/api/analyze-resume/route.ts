@@ -231,3 +231,34 @@ ${text}
         );
     }
 }
+
+export async function DELETE(req: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+
+        if (id) {
+            // Delete a specific record (must belong to this user)
+            // @ts-ignore
+            await prisma.resumeAnalysis.deleteMany({
+                where: { id, userId: session.user.id },
+            });
+        } else {
+            // Delete ALL resume analyses for this user
+            // @ts-ignore
+            await prisma.resumeAnalysis.deleteMany({
+                where: { userId: session.user.id },
+            });
+        }
+
+        return NextResponse.json({ ok: true });
+    } catch (error: any) {
+        console.error("Delete resume analysis error:", error);
+        return NextResponse.json({ error: "Failed to delete." }, { status: 500 });
+    }
+}

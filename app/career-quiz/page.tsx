@@ -39,7 +39,7 @@ export default function CareerQuizPage() {
       <PageShell
         title="Career Quiz"
         description="Answer a few questions to find careers that fit you."
-        maxWidth="lg"
+        maxWidth="xl"
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -78,7 +78,7 @@ export default function CareerQuizPage() {
       <PageShell
         title="Career Quiz"
         description="Answer a few questions to find careers that fit you."
-        maxWidth="lg"
+        maxWidth="xl"
       >
         <Card padding="lg">
           <div className="flex flex-col items-center py-8 text-center">
@@ -125,7 +125,7 @@ export default function CareerQuizPage() {
     <PageShell
       title="Career Quiz"
       description="Answer a few questions to find careers that fit you."
-      maxWidth="lg"
+      maxWidth="xl"
     >
       <AnimatePresence mode="wait">
         {phase === "results" ? (

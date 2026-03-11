@@ -15,7 +15,7 @@ export function Footer() {
       className="mt-auto border-t border-[var(--color-border)] bg-[var(--color-surface)]"
       role="contentinfo"
     >
-      <div className="mx-auto px-6 py-14 sm:px-8 lg:px-12">
+      <div className="mx-auto px-12 py-4">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <Link

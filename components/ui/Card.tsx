@@ -12,9 +12,9 @@ interface CardProps extends HTMLMotionProps<"div"> {
 
 const paddingClasses = {
   none: "",
-  sm: "p-4",
-  md: "p-6",
-  lg: "p-8",
+  sm: "!p-4",
+  md: "!p-6",
+  lg: "!p-6", // normalised to match md for consistent card sizing
 };
 
 export function Card({

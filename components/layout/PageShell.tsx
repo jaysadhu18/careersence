@@ -27,7 +27,7 @@ export function PageShell({
   maxWidth = "xl",
 }: PageShellProps) {
   return (
-    <div className="mx-auto w-full px-6 py-10 sm:px-8 lg:px-12">
+    <div className="mx-auto w-full px-12 py-4">
       <div
         className={`mx-auto ${maxWidthClasses[maxWidth]} ${sidebar ? "flex gap-8 lg:flex-row" : ""
           }`}

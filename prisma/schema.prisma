@@ -15,6 +15,8 @@ model User {
   phone     String?
   role      String?    // student, recent_graduate, career_switcher, other
   interests String?    // JSON array of selected interests
+  isAdmin   Boolean    @default(false) // legacy field – kept to avoid data loss
+  disabled  Boolean    @default(false) // admin can disable / re-enable
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   roadmaps     Roadmap[]

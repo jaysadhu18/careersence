@@ -131,7 +131,7 @@ export default function ProfilePage() {
 
   if (status === "loading" || loading) {
     return (
-      <PageShell title="My Profile" maxWidth="md">
+      <PageShell title="My Profile" maxWidth="xl">
         <Card padding="lg">
           <div className="flex items-center justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-primary-200)] border-t-[var(--color-primary-600)]" />
@@ -142,7 +142,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <PageShell title="My Profile" description="Manage your account details and preferences." maxWidth="md">
+    <PageShell title="My Profile" description="Manage your account details and preferences." maxWidth="xl">
       <Card padding="lg">
         {/* Avatar & member info */}
         <div className="mb-6 flex items-center gap-4 border-b border-[var(--color-border)] pb-6">

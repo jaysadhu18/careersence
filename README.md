@@ -13,6 +13,7 @@ CareerSence is a modern web application designed to help individuals navigate th
 - **💼 Job Hunting & Tracking**: Search for live job listings and track your application status (Saved, Applied, Interviewing, etc.) using integrated job board data.
 - **📝 AI Career Quiz**: A two-phase interactive assessment that analyzes your profile to provide tailored career recommendations.
 - **🌓 Dark Mode Support**: A premium, responsive interface with seamless dark/light mode transitions.
+- **👨‍💼 Admin Panel**: Comprehensive dashboard for administrators to monitor platform activity, user statistics, and system health (restricted to `.admin.com` emails).
 
 ---
 
@@ -67,6 +68,12 @@ CareerSence is a modern web application designed to help individuals navigate th
    npm run dev
    ```
    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+6. **Create Admin User** (Optional):
+   ```bash
+   node scripts/make-admin.js admin@example.admin.com
+   ```
+   See [ADMIN_SETUP.md](ADMIN_SETUP.md) for more details on admin access.
 
 ---
 

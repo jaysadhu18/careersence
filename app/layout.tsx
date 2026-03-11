@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
+import { RootShell } from "@/components/layout/RootShell";
 // import { Footer } from "@/components/layout/Footer";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
@@ -39,13 +39,7 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider>
             <ToastProvider>
-              <div className="flex min-h-screen flex-col">
-              <Header />
-              <main id="main-content" className="flex-1">
-                {children}
-              </main>
-              {/* <Footer /> */}
-              </div>
+              <RootShell>{children}</RootShell>
             </ToastProvider>
           </ThemeProvider>
         </SessionProvider>

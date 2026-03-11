@@ -120,43 +120,8 @@ export default function AnalyzePage() {
     setCareerB("");
   }, []);
 
-  // Load from local storage on mount
-  useEffect(() => {
-    const savedData = localStorage.getItem("resumeAnalysisData");
-    const savedResult = localStorage.getItem("analysisResultType");
-    const savedTab = localStorage.getItem("analysisActiveTab");
-
-    if (savedData) {
-      try {
-        setResumeAnalysisData(JSON.parse(savedData));
-      } catch (e) {
-        console.error("Failed to parse saved resume data");
-      }
-    }
-    if (savedResult) {
-      setResult(savedResult as "resume" | "job" | "career");
-    }
-    if (savedTab) {
-      setActiveTab(savedTab);
-    }
-  }, []);
-
-  // Save to local storage on changes
-  useEffect(() => {
-    if (resumeAnalysisData) {
-      localStorage.setItem("resumeAnalysisData", JSON.stringify(resumeAnalysisData));
-    }
-  }, [resumeAnalysisData]);
-
-  useEffect(() => {
-    if (result) {
-      localStorage.setItem("analysisResultType", result);
-    }
-  }, [result]);
-
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    localStorage.setItem("analysisActiveTab", value);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,11 +136,6 @@ export default function AnalyzePage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-
-      // Clear previous storage when starting a new upload
-      localStorage.removeItem("resumeAnalysisData");
-      localStorage.removeItem("analysisResultType");
-      localStorage.setItem("resumeFileName", file.name);
 
       const response = await fetch("/api/analyze-resume", {
         method: "POST",

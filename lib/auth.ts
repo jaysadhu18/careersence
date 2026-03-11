@@ -3,6 +3,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? "jay@admin.com").toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin@123";
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -13,16 +16,33 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.trim().toLowerCase() },
-        });
+
+        const email = credentials.email.trim().toLowerCase();
+
+        // ── Admin hard-coded credentials ──────────────────────────────────
+        if (email === ADMIN_EMAIL && credentials.password === ADMIN_PASSWORD) {
+          return {
+            id: "admin",
+            email: ADMIN_EMAIL,
+            name: "Admin",
+            role: "admin",
+          };
+        }
+
+        // ── Regular user credentials ──────────────────────────────────────
+        const user = await prisma.user.findUnique({ where: { email } });
         if (!user?.password) return null;
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) return null;
+
+        // Prevent disabled users from logging in
+        if ((user as any).disabled) return null;
+
         return {
           id: user.id,
           email: user.email,
           name: user.name ?? undefined,
+          role: "user",
         };
       },
     }),
@@ -37,6 +57,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
+        token.role = (user as any).role ?? "user";
       }
       return token;
     },
@@ -45,6 +66,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
+        (session.user as any).role = token.role ?? "user";
       }
       return session;
     },

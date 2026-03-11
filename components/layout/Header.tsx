@@ -33,7 +33,7 @@ export function Header() {
       className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]"
       role="banner"
     >
-      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-6 sm:px-8 lg:px-12">
+      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-12">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 text-lg font-semibold text-[var(--color-text)] no-underline"

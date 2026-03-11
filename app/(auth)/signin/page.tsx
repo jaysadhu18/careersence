@@ -46,7 +46,14 @@ function SignInForm() {
         setFormError("Invalid email or password. Please try again.");
         return;
       }
-      router.push(callbackUrl);
+      // Check role — redirect admin to their dashboard
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+      if (session?.user?.role === "admin") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push(callbackUrl);
+      }
       router.refresh();
     } catch {
       setFormError("Something went wrong. Please try again.");
