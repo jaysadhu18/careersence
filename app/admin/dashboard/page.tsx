@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminOverviewCharts } from "@/components/admin/AdminOverviewCharts";
 import { StatCards } from "@/components/admin/StatCards";
 import { UserManagement } from "@/components/admin/UserManagement";
 
@@ -10,7 +11,7 @@ export default function AdminDashboardPage() {
         <div>
           <h2 className="text-2xl font-bold text-[var(--color-text)]">Welcome back, Admin 👋</h2>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Here's what's happening on CareerSence today.
+            Here&apos;s what&apos;s happening on CareerSence today.
           </p>
         </div>
         <Link
@@ -23,6 +24,9 @@ export default function AdminDashboardPage() {
 
       {/* Stat cards */}
       <StatCards />
+
+      {/* Visual analytics */}
+      <AdminOverviewCharts />
 
       {/* Recent users preview */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-soft)]">

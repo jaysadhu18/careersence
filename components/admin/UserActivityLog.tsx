@@ -35,21 +35,13 @@ interface UserOption {
 }
 
 const TYPE_CONFIG: Record<
-  ActivityType | "all",
-  { label: string; color: string; bg: string; dot: string; icon: React.ReactNode }
+  ActivityType,
+  { label: string; color: string; bg: string; icon: React.ReactNode }
 > = {
-  all: {
-    label: "All",
-    color: "text-[var(--color-text-muted)]",
-    bg: "bg-[var(--color-background)]",
-    dot: "bg-[var(--color-text-muted)]",
-    icon: null,
-  },
   registration: {
     label: "Registration",
     color: "text-[var(--color-primary-700)]",
     bg: "bg-[var(--color-primary-50)]",
-    dot: "bg-[var(--color-primary-500)]",
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -61,7 +53,6 @@ const TYPE_CONFIG: Record<
     label: "Roadmap",
     color: "text-indigo-700",
     bg: "bg-indigo-50",
-    dot: "bg-indigo-500",
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -73,7 +64,6 @@ const TYPE_CONFIG: Record<
     label: "Career Quiz",
     color: "text-purple-700",
     bg: "bg-purple-50",
-    dot: "bg-purple-500",
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -85,7 +75,6 @@ const TYPE_CONFIG: Record<
     label: "Career Tree",
     color: "text-emerald-700",
     bg: "bg-emerald-50",
-    dot: "bg-emerald-500",
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -97,7 +86,6 @@ const TYPE_CONFIG: Record<
     label: "Resume Analysis",
     color: "text-orange-700",
     bg: "bg-orange-50",
-    dot: "bg-orange-500",
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -109,7 +97,6 @@ const TYPE_CONFIG: Record<
     label: "Saved Job",
     color: "text-pink-700",
     bg: "bg-pink-50",
-    dot: "bg-pink-500",
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -118,16 +105,6 @@ const TYPE_CONFIG: Record<
     ),
   },
 };
-
-const ALL_TYPES: (ActivityType | "all")[] = [
-  "all",
-  "registration",
-  "roadmap",
-  "quiz",
-  "career_tree",
-  "resume_analysis",
-  "saved_job",
-];
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -162,7 +139,6 @@ export function UserActivityLog({ userId: initialUserId, compact = false }: Prop
   const [data, setData] = useState<PaginatedActivity | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [typeFilter, setTypeFilter] = useState<ActivityType | "all">("all");
 
   // User picker state
   const [selectedUserId, setSelectedUserId] = useState<string>(initialUserId ?? "");
@@ -194,19 +170,19 @@ export function UserActivityLog({ userId: initialUserId, compact = false }: Prop
   const fetchActivity = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), type: typeFilter });
+      const params = new URLSearchParams({ page: String(page) });
       if (selectedUserId) params.set("userId", selectedUserId);
       const res = await fetch(`/api/admin/activity?${params}`);
       if (res.ok) setData(await res.json());
     } finally {
       setLoading(false);
     }
-  }, [page, typeFilter, selectedUserId]);
+  }, [page, selectedUserId]);
 
   useEffect(() => { fetchActivity(); }, [fetchActivity]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [typeFilter, selectedUserId]);
+  useEffect(() => { setPage(1); }, [selectedUserId]);
 
   const items = data?.items ?? [];
 
@@ -344,29 +320,6 @@ export function UserActivityLog({ userId: initialUserId, compact = false }: Prop
           </div>
           )}
 
-          {/* Activity type tabs */}
-          <div className="flex flex-wrap gap-2">
-            {ALL_TYPES.map((t) => {
-              const cfg = TYPE_CONFIG[t];
-              const active = typeFilter === t;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTypeFilter(t)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    active
-                      ? t === "all"
-                        ? "bg-[var(--color-primary-600)] text-white"
-                        : `${cfg.bg} ${cfg.color} ring-2 ring-current ring-offset-1`
-                      : "bg-[var(--color-background)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]"
-                  }`}
-                >
-                  {t !== "all" && cfg.icon}
-                  {cfg.label}
-                </button>
-              );
-            })}
-          </div>
         </div>
       )}
 

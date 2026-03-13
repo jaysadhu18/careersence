@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/layout/Header";
+import { ChatBot } from "@/components/ui/ChatBot";
 
 export function RootShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,6 +18,7 @@ export function RootShell({ children }: { children: React.ReactNode }) {
       <main id="main-content" className="flex-1">
         {children}
       </main>
+      <ChatBot />
     </div>
   );
 }
