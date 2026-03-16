@@ -1,8 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import Image from "next/image";
 
 const navLinks = [
@@ -26,10 +26,40 @@ const navLinks = [
       </svg>
     ),
   },
+  {
+    href: "/admin/admins",
+    label: "Admins",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+      </svg>
+    ),
+  },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [adminName, setAdminName] = useState("Admin");
+  const [adminEmail, setAdminEmail] = useState("Loading...");
+
+  useEffect(() => {
+    async function fetchAdmin() {
+      try {
+        const res = await fetch("/api/admin/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user) {
+            setAdminName(data.user.name || "Admin");
+            setAdminEmail(data.user.email);
+          }
+        }
+      } catch (err) { }
+    }
+    fetchAdmin();
+  }, []);
+
+  const initial = adminName.charAt(0).toUpperCase() || "A";
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
@@ -59,11 +89,10 @@ export function AdminSidebar() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
-                      : "text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                    ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                    : "text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
+                    }`}
                 >
                   <span className={isActive ? "text-[var(--color-primary-600)]" : ""}>{link.icon}</span>
                   {link.label}
@@ -89,7 +118,10 @@ export function AdminSidebar() {
             View Site
           </Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
+            onClick={async () => {
+              await fetch("/api/admin/auth/logout", { method: "POST" });
+              window.location.href = "/admin/login";
+            }}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:bg-red-50 hover:text-red-600"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,11 +137,11 @@ export function AdminSidebar() {
       <div className="border-t border-[var(--color-border)] p-4">
         <div className="flex items-center gap-3 rounded-lg bg-[var(--color-primary-50)] px-3 py-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-600)] text-sm font-bold text-white">
-            A
+            {initial}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[var(--color-text)]">Admin</p>
-            <p className="truncate text-xs text-[var(--color-text-muted)]">jay@admin.com</p>
+            <p className="truncate text-sm font-semibold text-[var(--color-text)]">{adminName}</p>
+            <p className="truncate text-xs text-[var(--color-text-muted)]">{adminEmail}</p>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { getToken } from "next-auth/jwt";
+import { decode } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -13,29 +14,44 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
-
   // ── Admin section ─────────────────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
+    const adminTokenCookie = request.cookies.get("admin_token")?.value;
+    let isAdmin = false;
+
+    if (adminTokenCookie) {
+      try {
+        const decodedAdmin = await decode({
+          token: adminTokenCookie,
+          secret: process.env.NEXTAUTH_SECRET as string,
+        });
+        if (decodedAdmin && decodedAdmin.role === "admin") {
+          isAdmin = true;
+        }
+      } catch (err) { }
+    }
+
     // Admin login page: redirect to dashboard if already admin
     if (pathname === "/admin/login") {
-      if (token?.role === "admin") {
+      if (isAdmin) {
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));
       }
       return NextResponse.next();
     }
 
     // All other /admin/* routes require admin role
-    if (!token || token.role !== "admin") {
+    if (!isAdmin) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
     return NextResponse.next();
   }
 
-  // ── Regular routes ────────────────────────────────────────────────────
+  // ── Regular user routes ────────────────────────────────────────────────────
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
   const isPublic = publicPaths.includes(pathname);
   const isAuthPage = authPaths.includes(pathname);
 
@@ -49,8 +65,7 @@ export async function proxy(request: NextRequest) {
 
   // Signed in: redirect away from signin/signup
   if (isAuthPage) {
-    const dest = token.role === "admin" ? "/admin/dashboard" : "/overview";
-    return NextResponse.redirect(new URL(dest, request.url));
+    return NextResponse.redirect(new URL("/overview", request.url));
   }
 
   return NextResponse.next();

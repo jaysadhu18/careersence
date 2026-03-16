@@ -18,22 +18,27 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      const res = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (result?.error) {
-      setError("Invalid admin credentials. Please try again.");
-      return;
+      if (!res.ok) {
+        setError("Invalid admin credentials. Please try again.");
+        return;
+      }
+
+      // Successful login
+      router.push("/admin/dashboard");
+      router.refresh();
+    } catch (err) {
+      setLoading(false);
+      setError("An error occurred during login.");
     }
-
-    // Verify the signed-in user is actually an admin
-    // The middleware will handle the role check; just redirect and let it guard
-    router.push("/admin/dashboard");
   }
 
   return (

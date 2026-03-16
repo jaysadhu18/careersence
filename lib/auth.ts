@@ -19,16 +19,6 @@ export const authOptions: NextAuthOptions = {
 
         const email = credentials.email.trim().toLowerCase();
 
-        // ── Admin hard-coded credentials ──────────────────────────────────
-        if (email === ADMIN_EMAIL && credentials.password === ADMIN_PASSWORD) {
-          return {
-            id: "admin",
-            email: ADMIN_EMAIL,
-            name: "Admin",
-            role: "admin",
-          };
-        }
-
         // ── Regular user credentials ──────────────────────────────────────
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user?.password) return null;

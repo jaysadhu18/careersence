@@ -6,6 +6,7 @@ import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
 const pageTitles: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
   "/admin/users": "User Management",
+  "/admin/admins": "Admin Management",
 };
 
 export function AdminTopBar() {
