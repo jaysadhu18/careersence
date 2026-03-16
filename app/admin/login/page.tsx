@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
       }
 
       // Successful login
-      router.push("/admin/dashboard");
+      router.replace("/admin/dashboard");
       router.refresh();
     } catch (err) {
       setLoading(false);

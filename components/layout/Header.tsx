@@ -40,7 +40,7 @@ export function Header() {
           aria-label="Careersence home"
         >
           <Image src="/logo.png" alt="Careersence logo" width={40} height={40} className="h-10 w-10 rounded" />
-          <span className="hidden sm:inline">CareerSence</span>
+          <span className="hidden sm:inline">CareerSense</span>
         </Link>
 
         {isLoggedIn && (

@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
 
     // All other /admin/* routes require admin role
     if (!isAdmin) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      return NextResponse.redirect(new URL("/signin", request.url));
     }
     return NextResponse.next();
   }
@@ -65,6 +65,10 @@ export async function proxy(request: NextRequest) {
 
   // Signed in: redirect away from signin/signup
   if (isAuthPage) {
+    const role = (token as any).role ?? "user";
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
     return NextResponse.redirect(new URL("/overview", request.url));
   }
 

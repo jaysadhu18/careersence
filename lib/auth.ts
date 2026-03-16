@@ -19,20 +19,34 @@ export const authOptions: NextAuthOptions = {
 
         const email = credentials.email.trim().toLowerCase();
 
-        // ── Regular user credentials ──────────────────────────────────────
+        // 1. Check for hardcoded admin credentials first
+        if (email === ADMIN_EMAIL && credentials.password === ADMIN_PASSWORD) {
+          return {
+            id: "admin-1",
+            email: ADMIN_EMAIL,
+            name: "Default Admin",
+            role: "admin",
+          };
+        }
+
+        // 2. Check for regular user or admin in DB
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user?.password) return null;
+        if (!user || !user.password) return null;
+
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) return null;
 
         // Prevent disabled users from logging in
-        if ((user as any).disabled) return null;
+        if (user.disabled) return null;
+
+        // Detect role: check role field or legacy isAdmin flag
+        const isAdmin = user.isAdmin || user.role?.toLowerCase() === "admin";
 
         return {
           id: user.id,
           email: user.email,
           name: user.name ?? undefined,
-          role: "user",
+          role: isAdmin ? "admin" : "user",
         };
       },
     }),
