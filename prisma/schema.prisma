@@ -24,6 +24,7 @@ model User {
   quizSessions QuizSession[]
   careerTrees  CareerTree[]
   resumeAnalyses ResumeAnalysis[]
+  savedResources SavedResource[]
 }
 
 model Roadmap {
@@ -83,4 +84,20 @@ model ResumeAnalysis {
   subScores       String   // JSON: { impact, skills, formatting }
   markdownReport  String
   createdAt       DateTime @default(now())
+}
+
+model SavedResource {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resourceId      String   // external API ID (e.g. yt-xc34X, doc-552)
+  title           String
+  description     String   // store a snippet
+  url             String
+  type            String   // course, video, article, bootcamp
+  source          String   // e.g. "YouTube", "Coursera"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, resourceId])
 }

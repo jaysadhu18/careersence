@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { learningResources } from "@/lib/mock-data";
 
 export type ResourceType = "course" | "article" | "video" | "bootcamp";
@@ -39,13 +39,64 @@ export function useResources(filters?: {
     return list;
   }, [filters?.query, filters?.type, filters?.level]);
 
-  const toggleSave = (id: string) => {
+  useEffect(() => {
+    async function fetchSaved() {
+      try {
+        const res = await fetch("/api/learning/saved");
+        if (res.ok) {
+          const data = await res.json();
+          const ids = data.resources?.map((r: any) => r.resourceId) || [];
+          setSavedIds(new Set(ids));
+        }
+      } catch (err) {
+        console.error("Failed to fetch saved resources");
+      }
+    }
+    fetchSaved();
+  }, []);
+
+  const toggleSave = async (resource: Resource) => {
+    const isSaved = savedIds.has(resource.id);
+
+    // Optimistic UI update
     setSavedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (isSaved) next.delete(resource.id);
+      else next.add(resource.id);
       return next;
     });
+
+    try {
+      if (isSaved) {
+        // Unsave
+        await fetch(`/api/learning/saved?resourceId=${encodeURIComponent(resource.id)}`, {
+          method: "DELETE",
+        });
+      } else {
+        // Save
+        await fetch("/api/learning/saved", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            resourceId: resource.id,
+            title: resource.title,
+            description: resource.description,
+            url: resource.url,
+            type: resource.type,
+            source: resource.source,
+          }),
+        });
+      }
+    } catch (err) {
+      console.error("Failed to toggle save resource", err);
+      // Revert optimistic update on failure
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (isSaved) next.add(resource.id);
+        else next.delete(resource.id);
+        return next;
+      });
+    }
   };
 
   return {

@@ -9,6 +9,7 @@ import { RoadmapHistorySection } from "@/components/domain/RoadmapHistorySection
 import { QuizHistorySection } from "@/components/domain/QuizHistorySection";
 import { CareerTreeHistorySection } from "@/components/domain/CareerTreeHistorySection";
 import { ResumeAnalysisOverviewSection } from "@/components/domain/ResumeAnalysisOverviewSection";
+import { SavedResourcesSection } from "@/components/domain/SavedResourcesSection";
 import { prisma } from "@/lib/prisma";
 import { FadeInContent } from "@/components/layout/FadeInContent";
 
@@ -114,6 +115,31 @@ export default async function OverviewPage() {
     careerTrees = [];
   }
 
+  // Fetch saved resources array
+  let savedResources: any[] = [];
+  try {
+    if (user?.id) {
+      // @ts-ignore - Prisma types might not have caught up in the IDE yet
+      const dbResources = await prisma.savedResource.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      });
+      savedResources = dbResources.map((r: any) => ({
+        id: r.resourceId,
+        title: r.title,
+        description: r.description,
+        url: r.url,
+        type: r.type,
+        source: r.source,
+        level: "All Levels", // Required by Resource interface
+        durationMinutes: 0, // Mock
+      }));
+    }
+  } catch {
+    savedResources = [];
+  }
+
   return (
     <PageShell
       title="Your career overview"
@@ -121,7 +147,6 @@ export default async function OverviewPage() {
       maxWidth="xl"
     >
       <div className="space-y-8">
-
         {/* Job Hunting - full width rectangle */}
         <FadeInContent delay={0.1}>
           <Card padding="md" className="w-full" hoverable>
@@ -143,6 +168,25 @@ export default async function OverviewPage() {
               </Link>
             </div>
           </Card>
+        </FadeInContent>
+
+        {/* Learning Resources */}
+        <FadeInContent delay={0.15}>
+          <section className="space-y-4">
+            <CardHeader
+              title="Learning Resources"
+              description="Your saved courses, videos, and reading materials."
+              action={
+                <Link
+                  href="/learning-resources"
+                  className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)]"
+                >
+                  + Find more
+                </Link>
+              }
+            />
+            <SavedResourcesSection initialResources={savedResources} />
+          </section>
         </FadeInContent>
 
         {/* Resume Analysis Dashboard Section */}

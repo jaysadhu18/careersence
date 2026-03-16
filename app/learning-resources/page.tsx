@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
+import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { ResourceCard } from "@/components/domain/ResourceCard";
@@ -67,7 +68,28 @@ export default function LearningResourcesPage() {
     }
   }
 
-  const displayedResources = hasSearched ? apiResources : resources;
+  useEffect(() => {
+    if (!searchInput.trim()) {
+      setHasSearched(false);
+      setApiResources([]);
+    }
+  }, [searchInput]);
+
+  const displayedResources = useMemo(() => {
+    let result = hasSearched ? apiResources : resources;
+
+    if (hasSearched) {
+      if (type) {
+        result = result.filter((r) => r.type === type);
+      }
+      if (level) {
+        // Assume API results might be "All Levels" or undefined, so don't completely hide them unless there's a strict level set.
+        result = result.filter((r) => r.level === level || r.level === "All Levels");
+      }
+    }
+
+    return result;
+  }, [hasSearched, apiResources, resources, type, level]);
 
   return (
     <PageShell
@@ -75,57 +97,62 @@ export default function LearningResourcesPage() {
       description="Courses, articles, and videos to build skills for your chosen path. Filter by type and level."
       maxWidth="xl"
     >
-      <div className="mb-8 flex flex-col gap-4">
-        {/* Line 1: Search, Search Button, Type */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end w-full">
-          <div className="flex flex-1 items-end gap-2">
-            <div className="flex-1">
+      <Card padding="md" className="mb-8">
+        <div className="flex flex-col gap-4">
+          {/* Line 1: Search, Type */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end w-full">
+            <div className="w-full sm:w-1/2">
               <Input
                 label="Search"
                 placeholder="Search by title or keyword..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="text-[var(--color-text)] bg-[var(--color-surface)]"
               />
             </div>
+            <div className="w-full sm:w-1/2">
+              <Select
+                label="Type"
+                options={typeOptions}
+                value={type}
+                onChange={(e) => setType(e.target.value as ResourceType | "")}
+              />
+            </div>
+          </div>
+
+          {/* Line 2: Level, Sort */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end w-full">
+            <div className="w-full sm:w-1/2">
+              <Select
+                label="Level"
+                options={levelOptions}
+                value={level}
+                onChange={(e) => setLevel(e.target.value as Level | "")}
+              />
+            </div>
+            <div className="w-full sm:w-1/2">
+              <Select
+                label="Sort"
+                options={sortOptions}
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Line 3: Search Action Button */}
+          <div className="flex sm:justify-start w-full">
             <button
               onClick={handleSearch}
               disabled={isSearching}
-              className="flex h-[42px] items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-5 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-background)] active:bg-[var(--color-border)] disabled:opacity-50"
+              className="flex h-[44px] w-full sm:w-auto min-w-[160px] items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-6 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-primary-700)] active:bg-[var(--color-primary-800)] disabled:opacity-60"
             >
-              {isSearching ? "Searching..." : "Search"}
+              {isSearching ? "Searching..." : "Search Resources"}
             </button>
           </div>
-          <div className="w-full sm:w-1/3">
-            <Select
-              label="Type"
-              options={typeOptions}
-              value={type}
-              onChange={(e) => setType(e.target.value as ResourceType | "")}
-            />
-          </div>
         </div>
-
-        {/* Line 2: Level, Sort */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end w-full">
-          <div className="w-full sm:w-1/2">
-            <Select
-              label="Level"
-              options={levelOptions}
-              value={level}
-              onChange={(e) => setLevel(e.target.value as Level | "")}
-            />
-          </div>
-          <div className="w-full sm:w-1/2">
-            <Select
-              label="Sort"
-              options={sortOptions}
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+      </Card>
 
       {displayedResources.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-12 text-center">
@@ -142,7 +169,7 @@ export default function LearningResourcesPage() {
             <ResourceCard
               key={r.id}
               resource={r}
-              onSave={() => toggleSave(r.id)}
+              onSave={() => toggleSave(r)}
               isSaved={savedIds.has(r.id)}
             />
           ))}

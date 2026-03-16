@@ -37,10 +37,10 @@ export const authOptions: NextAuthOptions = {
         if (!ok) return null;
 
         // Prevent disabled users from logging in
-        if (user.disabled) return null;
+        if ((user as any).disabled) return null;
 
         // Detect role: check role field or legacy isAdmin flag
-        const isAdmin = user.isAdmin || user.role?.toLowerCase() === "admin";
+        const isAdmin = (user as any).isAdmin || user.role?.toLowerCase() === "admin";
 
         return {
           id: user.id,
