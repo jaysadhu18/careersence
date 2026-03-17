@@ -10,7 +10,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
-    { label, error, helperText, leftAddon, rightAddon, id, className = "", ...props },
+    { label, error, helperText, leftAddon, rightAddon, id, className = "", style: externalStyle, ...props },
     ref
   ) => {
     const generatedId = useId();
@@ -39,7 +39,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={
               error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
             }
-            className={`block w-full rounded-lg border bg-transparent py-2.5 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-500)] focus:ring-2 focus:ring-[var(--color-primary-500)]/20 disabled:cursor-not-allowed disabled:opacity-60 ${leftAddon ? "pl-10" : "pl-3"
+            style={{
+              ...externalStyle,
+              backgroundColor: "var(--color-surface)",
+              color: "var(--color-text)",
+              colorScheme: "inherit",
+            }}
+            className={`block w-full rounded-lg border !bg-[var(--color-surface)] py-2.5 !text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-500)] focus:ring-2 focus:ring-[var(--color-primary-500)]/20 disabled:cursor-not-allowed disabled:opacity-60 [&:-webkit-autofill]:shadow-[inset_0_0_0_1000px_var(--color-surface)] [&:-webkit-autofill]:[color:var(--color-text)] ${leftAddon ? "pl-10" : "pl-3"
               } ${rightAddon ? "pr-10" : "pr-3"} ${error
                 ? "border-[var(--color-error)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]/20"
                 : "border-[var(--color-border)]"

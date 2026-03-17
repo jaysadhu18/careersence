@@ -108,7 +108,6 @@ export default function LearningResourcesPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="text-[var(--color-text)] bg-[var(--color-surface)]"
               />
             </div>
             <div className="w-full sm:w-1/2">
