@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // Helper to parse ISO 8601 duration from YouTube (e.g., PT1H30M15S)
 function parseIsoDuration(duration: string): number {
@@ -24,10 +25,45 @@ export async function GET(req: NextRequest) {
         const YOUTUBE_API_KEY = process.env.YOUTUBE_API;
         const DEV_API_KEY = process.env.DEV_API;
 
+        let internalResources: any[] = [];
         let ytCourses: any[] = [];
         let devArticles: any[] = [];
 
-        // 1. Fetch from YouTube
+        // 1. Fetch internal approved resources
+        try {
+            // @ts-ignore
+            const dbResources = await prisma.internalResource.findMany({
+                where: {
+                    status: "approved",
+                    OR: [
+                        { title: { contains: q, mode: "insensitive" } },
+                        { description: { contains: q, mode: "insensitive" } },
+                        { courseTitle: { contains: q, mode: "insensitive" } },
+                    ]
+                } as any,
+                include: {
+                    submittedBy: {
+                        select: { name: true, organizationName: true }
+                    }
+                }
+            });
+
+            // @ts-ignore
+            internalResources = dbResources.map((r: any) => ({
+                id: `internal-${r.id}`,
+                title: r.title || r.courseTitle,
+                description: r.description || r.courseDescription || r.summary,
+                type: r.resourceType,
+                level: r.level || "All Levels",
+                durationMinutes: (r.durationSeconds ? Math.round(r.durationSeconds / 60) : r.readTimeMinutes) || r.totalDuration || 0,
+                source: r.submittedBy.organizationName || r.submittedBy.name || "Provider",
+                url: r.videoFilePath || "#", // Placeholder until player modal added
+            }));
+        } catch (dbError) {
+            console.error("Failed to fetch internal resources:", dbError);
+        }
+
+        // 2. Fetch from YouTube
         if (YOUTUBE_API_KEY) {
             const ytResponse = await fetch(
                 `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(
@@ -68,11 +104,9 @@ export async function GET(req: NextRequest) {
                     }));
                 }
             }
-        } else {
-            console.warn("YOUTUBE_API key is missing in .env.local!");
         }
 
-        // 2. Fetch from DEV.to API for Articles
+        // 3. Fetch from DEV.to API for Articles
         if (DEV_API_KEY) {
             const devResponse = await fetch(`https://dev.to/api/articles/search?q=${encodeURIComponent(q)}&per_page=15`, {
                 headers: { "api-key": DEV_API_KEY }
@@ -92,15 +126,11 @@ export async function GET(req: NextRequest) {
                         url: article.url,
                     }));
                 }
-            } else {
-                console.error("DEV API failed:", await devResponse.text());
             }
-        } else {
-            console.warn("DEV_API key is missing in .env.local!");
         }
 
-        // Combine both sources
-        const combined = [...ytCourses, ...devArticles];
+        // Combine all sources
+        const combined = [...internalResources, ...ytCourses, ...devArticles];
 
         // Shuffle logically to interleave articles and videos randomly but efficiently
         combined.sort(() => Math.random() - 0.5);

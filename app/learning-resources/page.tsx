@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -96,6 +97,17 @@ export default function LearningResourcesPage() {
       title="Learning Resources"
       description="Courses, articles, and videos to build skills for your chosen path. Filter by type and level."
       maxWidth="xl"
+      action={
+        <Link
+          href="/learning-resources/provider"
+          className="inline-flex h-[36px] items-center justify-center rounded-lg bg-[var(--color-primary-100)] px-4 text-sm font-semibold text-[var(--color-primary-700)] shadow-sm transition-colors hover:bg-[var(--color-primary-200)] hover:text-[var(--color-primary-800)]"
+        >
+          <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Resource Registration
+        </Link>
+      }
     >
       <Card padding="md" className="mb-8">
         <div className="flex flex-col gap-4">

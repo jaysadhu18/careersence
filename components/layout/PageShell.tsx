@@ -8,6 +8,7 @@ interface PageShellProps {
   title: string;
   description?: string;
   sidebar?: ReactNode;
+  action?: ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
 }
 
@@ -24,6 +25,7 @@ export function PageShell({
   title,
   description,
   sidebar,
+  action,
   maxWidth = "xl",
 }: PageShellProps) {
   return (
@@ -46,15 +48,18 @@ export function PageShell({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <header className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text)] sm:text-3xl">
-              {title}
-            </h1>
-            {description && (
-              <p className="mt-2 text-[var(--color-text-muted)]">
-                {description}
-              </p>
-            )}
+          <header className="mb-8 flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text)] sm:text-3xl">
+                {title}
+              </h1>
+              {description && (
+                <p className="mt-2 text-[var(--color-text-muted)]">
+                  {description}
+                </p>
+              )}
+            </div>
+            {action && <div>{action}</div>}
           </header>
           {children}
         </motion.div>

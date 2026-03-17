@@ -25,6 +25,8 @@ model User {
   careerTrees  CareerTree[]
   resumeAnalyses ResumeAnalysis[]
   savedResources SavedResource[]
+  internalResources InternalResource[]
+  organizationName String? // For institute/university Resource Providers
 }
 
 model Roadmap {
@@ -100,4 +102,38 @@ model SavedResource {
   updatedAt       DateTime @updatedAt
 
   @@unique([userId, resourceId])
+}
+
+model InternalResource {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  resourceType    String   // "video", "article", "course"
+  submittedById   String
+  submittedBy     User     @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  status          String   @default("pending") // "pending", "approved", "rejected"
+  
+  // Video specific
+  videoFilePath   String?
+  thumbnailPath   String?
+  durationSeconds Int?
+  resolution      String?
+  language        String?
+
+  // Article specific
+  articleContent  String?  @db.Text
+  summary         String?
+  readTimeMinutes Int?
+  tags            String?  // JSON array
+
+  // Course specific
+  courseTitle     String?
+  courseDescription String?
+  modules         String?  // JSON array
+  totalDuration   Int?
+  level           String?
+  certificateAvailable Boolean? @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
