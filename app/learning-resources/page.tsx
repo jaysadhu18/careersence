@@ -38,8 +38,16 @@ export default function LearningResourcesPage() {
   const [sort, setSort] = useState("relevance");
 
   const [apiResources, setApiResources] = useState<any[]>([]);
+  const [approvedResources, setApprovedResources] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/courses/approved")
+      .then((r) => r.json())
+      .then((d) => setApprovedResources(d.courses || []))
+      .catch(() => {});
+  }, []);
 
   const {
     resources,
@@ -77,7 +85,7 @@ export default function LearningResourcesPage() {
   }, [searchInput]);
 
   const displayedResources = useMemo(() => {
-    let result = hasSearched ? apiResources : resources;
+    let result = hasSearched ? apiResources : [...approvedResources, ...resources];
 
     if (hasSearched) {
       if (type) {
