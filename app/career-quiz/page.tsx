@@ -196,7 +196,7 @@ export default function CareerQuizPage() {
                             </Button>
                           )}
                           <Link
-                            href="/learning-resources"
+                            href={"/learning-resources?q=" + encodeURIComponent(career.title)}
                             className="inline-flex items-center justify-center rounded-lg border-2 border-[var(--color-primary-600)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)]"
                           >
                             Explore learning

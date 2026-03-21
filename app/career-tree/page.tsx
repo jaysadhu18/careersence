@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
+import Link from "next/link";
 import {
   ReactFlow,
   Background,
@@ -23,7 +24,6 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
-import { Badge } from "@/components/ui/Badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
@@ -220,6 +220,20 @@ export default function CareerTreePage() {
 
   const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [milestoneResources, setMilestoneResources] = useState<any[]>([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+
+  // Restore saved tree on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("career-tree-data");
+      if (saved) {
+        generateNodesAndEdges(JSON.parse(saved));
+        setView("tree");
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const totalSteps = 3;
 
@@ -244,6 +258,15 @@ export default function CareerTreePage() {
 
   const onShowDetails = useCallback((m: Milestone) => {
     setSelectedMilestone(m);
+    setMilestoneResources([]);
+    if (m.skills.length === 0) return;
+    setResourcesLoading(true);
+    const query = m.skills.slice(0, 3).join(" ");
+    fetch(`/api/courses/search?q=${encodeURIComponent(query)}`)
+      .then((r) => r.json())
+      .then((d) => setMilestoneResources((d.courses || []).slice(0, 2)))
+      .catch(() => {})
+      .finally(() => setResourcesLoading(false));
   }, []);
 
   const generateNodesAndEdges = (treeData: CareerTreeData) => {
@@ -328,6 +351,7 @@ export default function CareerTreePage() {
         return;
       }
       generateNodesAndEdges(data.tree);
+      sessionStorage.setItem("career-tree-data", JSON.stringify(data.tree));
       setView("tree");
     } catch {
       setError("Network error. Please try again.");
@@ -336,6 +360,7 @@ export default function CareerTreePage() {
   };
 
   const startOver = () => {
+    sessionStorage.removeItem("career-tree-data");
     setView("form");
     setStep(1);
     setForm(initialForm);
@@ -644,48 +669,104 @@ export default function CareerTreePage() {
           open={!!selectedMilestone}
           onClose={() => setSelectedMilestone(null)}
           title={selectedMilestone.title}
-          size="md"
+          size="lg"
         >
-          <div className="space-y-6">
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-500)] mb-2">
-                Timeframe
-              </div>
-              <div className="inline-block rounded-xl bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)] px-4 py-2 text-sm font-bold text-[var(--color-primary-600)] dark:text-[var(--color-primary-200)] border border-[var(--color-primary-100)] dark:border-[var(--color-primary-800)]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+
+            {/* ── LEFT: Milestone Details ── */}
+            <div className="flex flex-col gap-5">
+              {/* Timeframe pill */}
+              <div className="inline-flex items-center gap-2 self-start rounded-full px-4 py-1.5 text-xs font-bold bg-[var(--color-primary-500)]/10 text-[var(--color-primary-500)] border border-[var(--color-primary-500)]/20">
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 {selectedMilestone.timeframe}
               </div>
+
+              {/* Skills */}
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] mb-2">Skills to Acquire</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedMilestone.skills.map((skill, i) => (
+                    <span key={i} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text)]">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-3">Execution Strategy</p>
+                <ul className="space-y-2">
+                  {selectedMilestone.actions.map((action, i) => (
+                    <li key={i} className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 hover:border-[var(--color-primary-400)]/50 transition-colors">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-[var(--color-primary-500)]/10 text-[10px] font-black text-[var(--color-primary-500)]">
+                        {i + 1}
+                      </span>
+                      <p className="text-sm text-[var(--color-text)] leading-snug">{action}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-[var(--color-secondary-500)] mb-3">
-                Skills to Acquire
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {selectedMilestone.skills.map((skill, i) => (
-                  <Badge key={i} variant="outline" className="text-xs py-1 px-3 !rounded-lg border-[var(--color-border)]">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
+            {/* ── RIGHT: Learning Resources ── */}
+            <div className="flex flex-col gap-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-400)]">Suggested Learning Resources</p>
+
+              {resourcesLoading ? (
+                <div className="flex flex-1 items-center justify-center gap-2 text-sm text-[var(--color-text-muted)]">
+                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Finding resources...
+                </div>
+              ) : milestoneResources.length === 0 ? (
+                <p className="text-sm text-[var(--color-text-muted)]">No resources found.</p>
+              ) : (
+                <>
+                <div className="flex flex-col gap-3">
+                  {milestoneResources.map((r) => (
+                    <a
+                      key={r.id}
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex flex-col gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3.5 hover:border-[var(--color-primary-400)]/60 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="rounded-md bg-[var(--color-primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-500)]">
+                          {r.type}
+                        </span>
+                        <span className="text-[10px] text-[var(--color-text-muted)] truncate max-w-[100px]">{r.source}</span>
+                      </div>
+                      <p className="text-xs font-semibold text-[var(--color-text)] line-clamp-2 leading-snug group-hover:text-[var(--color-primary-500)] transition-colors">
+                        {r.title}
+                      </p>
+                      <span className="mt-auto text-[10px] font-bold text-[var(--color-primary-500)] flex items-center gap-1">
+                        Watch / Read
+                        <svg className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+                <Link
+                  href={"/learning-resources?q=" + encodeURIComponent(selectedMilestone.skills.slice(0, 3).join(" "))}
+                  className="mt-1 flex items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] py-2 text-xs font-semibold text-[var(--color-text-muted)] hover:border-[var(--color-primary-400)]/60 hover:text-[var(--color-primary-500)] transition-colors"
+                >
+                  Show more resources
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
+                </>
+              )}
             </div>
 
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-4">
-                Execution Strategy
-              </div>
-              <ul className="space-y-3">
-                {selectedMilestone.actions.map((action, i) => (
-                  <li key={i} className="flex items-start gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-4 hover:border-[var(--color-primary-300)] transition-colors group">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)] text-[10px] font-black text-[var(--color-primary-600)] group-hover:scale-110 transition-transform">
-                      {i + 1}
-                    </div>
-                    <p className="text-sm text-[var(--color-text)] font-medium leading-relaxed">
-                      {action}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
         </Modal>
       )}

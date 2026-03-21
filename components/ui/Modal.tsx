@@ -7,13 +7,14 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "fullscreen";
 }
 
 const sizeClasses = {
   sm: "max-w-sm",
   md: "max-w-md",
-  lg: "max-w-lg",
+  lg: "max-w-3xl",
+  fullscreen: "max-w-none w-full h-full",
 };
 
 export function Modal({ open, onClose, title, children, size = "md" }: ModalProps) {
@@ -43,7 +44,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
         onClick={onClose}
       />
       <div
-        className={`relative w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-lg)] ${sizeClasses[size]}`}
+        className={`relative w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-lg)] ${sizeClasses[size]} ${size === "fullscreen" ? "!rounded-none flex flex-col inset-0 absolute" : ""}`}
       >
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
           <h2 id="modal-title" className="text-lg font-semibold text-[var(--color-text)]">
@@ -60,7 +61,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
             </svg>
           </button>
         </div>
-        <div className="px-6 py-4">{children}</div>
+        <div className={`px-6 py-4 ${size === "fullscreen" ? "flex-1 overflow-y-auto" : ""}`}>{children}</div>
       </div>
     </div>
   );

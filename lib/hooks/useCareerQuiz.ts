@@ -99,11 +99,21 @@ const TOTAL_QUESTIONS = TOTAL_PHASE1 + TOTAL_PHASE2; // 15
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useCareerQuiz() {
-    const [phase, setPhase] = useState<QuizPhase>("phase1");
+    const [phase, setPhase] = useState<QuizPhase>(() => {
+        try {
+            const saved = sessionStorage.getItem("quiz-results");
+            return saved ? "results" : "phase1";
+        } catch { return "phase1"; }
+    });
     const [currentStep, setCurrentStep] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [phase2Questions, setPhase2Questions] = useState<QuizQuestion[]>([]);
-    const [results, setResults] = useState<CareerResult[]>([]);
+    const [results, setResults] = useState<CareerResult[]>(() => {
+        try {
+            const saved = sessionStorage.getItem("quiz-results");
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
     const [error, setError] = useState<string | null>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [roadmapLoading, setRoadmapLoading] = useState<Set<string>>(new Set());
@@ -225,6 +235,7 @@ export function useCareerQuiz() {
 
                 const data = await res.json();
                 setResults(data.results);
+                try { sessionStorage.setItem("quiz-results", JSON.stringify(data.results)); } catch {}
                 setPhase("results");
             } catch (e) {
                 setError(
@@ -277,6 +288,7 @@ export function useCareerQuiz() {
 
     // Reset everything
     const retake = useCallback(() => {
+        try { sessionStorage.removeItem("quiz-results"); } catch {}
         setPhase("phase1");
         setCurrentStep(0);
         setAnswers({});
