@@ -65,7 +65,8 @@ export default function LearningResourcesPage() {
     setHasSearched(true);
 
     try {
-      const res = await fetch(`/api/courses/search?q=${encodeURIComponent(searchInput)}`);
+      const typeParam = type ? `&type=${encodeURIComponent(type)}` : "";
+      const res = await fetch(`/api/courses/search?q=${encodeURIComponent(searchInput)}${typeParam}`);
       if (res.ok) {
         const data = await res.json();
         setApiResources(data.courses || []);

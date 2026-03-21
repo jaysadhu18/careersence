@@ -16,6 +16,7 @@ function parseIsoDuration(duration: string): number {
 export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const q = searchParams.get("q");
+    const reqType = searchParams.get("type");
 
     if (!q) {
         return NextResponse.json({ courses: [] });
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
             const dbResources = await prisma.internalResource.findMany({
                 where: {
                     status: "approved",
+                    ...(reqType ? { resourceType: reqType } : {}),
                     OR: [
                         { title: { contains: q, mode: "insensitive" } },
                         { description: { contains: q, mode: "insensitive" } },
@@ -64,7 +66,7 @@ export async function GET(req: NextRequest) {
         }
 
         // 2. Fetch from YouTube
-        if (YOUTUBE_API_KEY) {
+        if (YOUTUBE_API_KEY && (!reqType || reqType === "video" || reqType === "course")) {
             const ytResponse = await fetch(
                 `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(
                     q + " course tutorial"
@@ -107,7 +109,7 @@ export async function GET(req: NextRequest) {
         }
 
         // 3. Fetch from DEV.to API for Articles
-        if (DEV_API_KEY) {
+        if (DEV_API_KEY && (!reqType || reqType === "article")) {
             const devResponse = await fetch(`https://dev.to/api/articles/search?q=${encodeURIComponent(q)}&per_page=15`, {
                 headers: { "api-key": DEV_API_KEY }
             });
