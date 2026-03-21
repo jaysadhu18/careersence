@@ -8,7 +8,6 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Modal } from "@/components/ui/Modal";
 import { ResourceCard } from "@/components/domain/ResourceCard";
 import { useResources } from "@/lib/hooks/useResources";
 import type { ResourceType, Level } from "@/lib/hooks/useResources";
@@ -45,30 +44,6 @@ export default function LearningResourcesPage() {
   const [apiResources, setApiResources] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [hasSubmissions, setHasSubmissions] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [history, setHistory] = useState<any[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-
-  const openHistory = async () => {
-    setShowHistory(true);
-    setHistoryLoading(true);
-    try {
-      const res = await fetch("/api/resource-provider/my-submissions?userId=" + session?.user?.id);
-      const data = await res.json();
-      setHistory(data.resources || []);
-    } catch {}
-    finally { setHistoryLoading(false); }
-  };
-
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    fetch("/api/resource-provider/my-submissions?userId=" + session.user.id)
-      .then((r) => r.json())
-      .then((d) => setHasSubmissions((d.resources?.length ?? 0) > 0))
-      .catch(() => {});
-  }, [session?.user?.id]);
-
   // Auto-search if redirected with ?q
   useEffect(() => {
     const q = searchParams.get("q");
@@ -122,25 +97,14 @@ export default function LearningResourcesPage() {
       maxWidth="xl"
       action={
         <div className="flex items-center gap-2">
-          {hasSubmissions && (
-            <button
-              onClick={openHistory}
-              className="inline-flex h-[36px] items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm font-semibold text-[var(--color-text)] shadow-sm transition-colors hover:border-[var(--color-primary-400)] hover:text-[var(--color-primary-600)]"
-            >
-              <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              Submission History
-            </button>
-          )}
           <Link
-            href="/learning-resources/provider"
-            className="inline-flex h-[36px] items-center justify-center rounded-lg bg-[var(--color-primary-100)] px-4 text-sm font-semibold text-[var(--color-primary-700)] shadow-sm transition-colors hover:bg-[var(--color-primary-200)] hover:text-[var(--color-primary-800)]"
+            href="/learning-resources/instructor"
+            className="inline-flex h-[36px] items-center justify-center rounded-lg border border-[var(--color-primary-400)] bg-[var(--color-surface)] px-4 text-sm font-semibold text-[var(--color-primary-600)] shadow-sm transition-colors hover:bg-[var(--color-primary-50)]"
           >
             <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            Resource Registration
+            Instructor Dashboard
           </Link>
         </div>
       }
@@ -253,47 +217,6 @@ export default function LearningResourcesPage() {
           ))}
         </div>
       )}
-
-      <Modal open={showHistory} onClose={() => setShowHistory(false)} title="Submission History" size="lg">
-        {historyLoading ? (
-          <div className="flex items-center justify-center gap-2 py-10 text-sm text-[var(--color-text-muted)]">
-            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
-            Loading...
-          </div>
-        ) : history.length === 0 ? (
-          <p className="py-10 text-center text-sm text-[var(--color-text-muted)]">No submissions found.</p>
-        ) : (
-          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-            {history.map((r) => (
-              <div key={r.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4 space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-sm text-[var(--color-text)]">{r.title || r.courseTitle}</p>
-                    <p className="text-xs capitalize text-[var(--color-text-muted)]">{r.resourceType}</p>
-                  </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold capitalize ${
-                    r.status === "approved" ? "bg-emerald-500/10 text-emerald-500"
-                    : r.status === "rejected" ? "bg-red-500/10 text-red-500"
-                    : "bg-yellow-500/10 text-yellow-500"
-                  }`}>{r.status}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-                  {r.description && <span className="col-span-2">{r.description}</span>}
-                  {r.level && <span>Level: <b className="text-[var(--color-text)]">{r.level}</b></span>}
-                  {r.durationSeconds && <span>Duration: <b className="text-[var(--color-text)]">{Math.round(r.durationSeconds / 60)} min</b></span>}
-                  {r.readTimeMinutes && <span>Read time: <b className="text-[var(--color-text)]">{r.readTimeMinutes} min</b></span>}
-                  {r.totalDuration && <span>Total: <b className="text-[var(--color-text)]">{r.totalDuration} min</b></span>}
-                  {r.language && <span>Language: <b className="text-[var(--color-text)]">{r.language}</b></span>}
-                  <span>Submitted: <b className="text-[var(--color-text)]">{new Date(r.createdAt).toLocaleDateString()}</b></span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Modal>
     </PageShell>
   );
 }

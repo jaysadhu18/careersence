@@ -24,9 +24,14 @@ model User {
   quizSessions QuizSession[]
   careerTrees  CareerTree[]
   resumeAnalyses ResumeAnalysis[]
-  savedResources SavedResource[]
+  savedResources    SavedResource[]
   internalResources InternalResource[]
-  organizationName String? // For institute/university Resource Providers
+  organizationName  String? // For institute/university Resource Providers
+
+  // New Curriculum Builder Relations
+  authoredCourses   Course[]     @relation("CourseAuthor")
+  enrollments       Enrollment[]
+  courseProgress    Progress[]
 }
 
 model Roadmap {
@@ -136,4 +141,67 @@ model InternalResource {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ----------------------------------------------------------------------
+// NEW CURRICULUM BUILDER DOMAIN
+// ----------------------------------------------------------------------
+
+model Course {
+  id          String         @id @default(cuid())
+  title       String
+  description String         @db.Text
+  price       Float          @default(0.0)
+  status      String         @default("DRAFT") // DRAFT, PENDING, PUBLISHED, REJECTED
+  coverImage  String?
+  authorId    String
+  author      User           @relation("CourseAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  sections    Section[]
+  enrollments Enrollment[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Section {
+  id       String    @id @default(cuid())
+  title    String
+  order    Int    
+  courseId String
+  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lectures Lecture[]
+}
+
+model Lecture {
+  id           String      @id @default(cuid())
+  title        String
+  type         String      // VIDEO, PDF, QUIZ
+  contentUrl   String?     // S3/Cloud Storage URL path
+  textContent  String?     @db.Text // For text-based lectures
+  duration     Int?        // Seconds
+  order        Int
+  sectionId    String
+  section      Section     @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  progress     Progress[]
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  studentId  String
+  courseId   String
+  enrolledAt DateTime @default(now())
+  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+}
+
+model Progress {
+  id         String   @id @default(cuid())
+  studentId  String
+  lectureId  String
+  isComplete Boolean  @default(false)
+  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lecture    Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, lectureId])
 }

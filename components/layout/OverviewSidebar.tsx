@@ -12,6 +12,8 @@ const links = [
   { href: "/job-hunting", label: "Job Hunting" },
   { href: "/college-finder", label: "College Finder" },
   { href: "/analyze", label: "Analyze" },
+  { href: "/my-learning", label: "My Learning" },
+  { href: "/learning-resources/instructor", label: "Instructor Dashboard" },
 ];
 
 export function OverviewSidebar() {
