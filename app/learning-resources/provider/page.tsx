@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { Modal } from "@/components/ui/Modal";
 
 export default function ResourceProviderPage() {
     const [userId, setUserId] = useState<string | null>(null);
@@ -38,6 +39,28 @@ export default function ResourceProviderPage() {
     // Course specific
     const [courseTitle, setCourseTitle] = useState("");
     const [level, setLevel] = useState("Beginner");
+
+    // Submission history
+    const [showHistory, setShowHistory] = useState(false);
+    const [history, setHistory] = useState<any[]>([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+
+    const openHistory = async () => {
+        setShowHistory(true);
+        setHistoryLoading(true);
+        try {
+            const res = await fetch("/api/resource-provider/my-submissions?userId=" + userId);
+            const data = await res.json();
+            setHistory(data.resources || []);
+        } catch {}
+        finally { setHistoryLoading(false); }
+    };
+
+    // Auto-open history if redirected with #history
+    useEffect(() => {
+        if (userId && window.location.hash === "#history") openHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId]);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -168,7 +191,18 @@ export default function ResourceProviderPage() {
     return (
         <PageShell title={`Provider Dashboard (${userRole})`} description="Submit new learning resources for verification.">
             <Card padding="lg">
-                <CardHeader title="Submit Internal Resource" description="Upload a video, article, or course directly to the platform." />
+                <div className="flex items-center justify-between mb-2">
+                    <CardHeader title="Submit Internal Resource" description="Upload a video, article, or course directly to the platform." />
+                    <button
+                        onClick={openHistory}
+                        className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] hover:border-[var(--color-primary-400)] hover:text-[var(--color-primary-500)] transition-colors shrink-0"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Submission History
+                    </button>
+                </div>
 
                 {submitResult && (
                     <div className="mb-6 rounded-lg bg-green-50 p-4 border border-green-200">
@@ -259,6 +293,40 @@ export default function ResourceProviderPage() {
                     </button>
                 </form>
             </Card>
+
+            <Modal open={showHistory} onClose={() => setShowHistory(false)} title="My Submission History" size="lg">
+                {historyLoading ? (
+                    <div className="flex items-center justify-center gap-2 py-10 text-sm text-[var(--color-text-muted)]">
+                        <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                        </svg>
+                        Loading...
+                    </div>
+                ) : history.length === 0 ? (
+                    <p className="py-10 text-center text-sm text-[var(--color-text-muted)]">No submissions yet.</p>
+                ) : (
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                        {history.map((r) => (
+                            <div key={r.id} className="flex items-start justify-between gap-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-sm font-semibold text-[var(--color-text)]">{r.title || r.courseTitle}</p>
+                                    <p className="text-xs text-[var(--color-text-muted)] capitalize">{r.resourceType}</p>
+                                </div>
+                                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold capitalize ${
+                                    r.status === "approved"
+                                        ? "bg-emerald-500/10 text-emerald-500"
+                                        : r.status === "rejected"
+                                        ? "bg-red-500/10 text-red-500"
+                                        : "bg-yellow-500/10 text-yellow-500"
+                                }`}>
+                                    {r.status}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Modal>
         </PageShell>
     );
 }

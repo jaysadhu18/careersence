@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
 import { Progress } from "@/components/ui/Progress";
@@ -51,6 +51,17 @@ export default function AIRoadmapPage() {
   const [error, setError] = useState("");
   const [stages, setStages] = useState<RoadmapStage[]>([]);
 
+  // Restore saved roadmap on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("roadmap-stages");
+      if (saved) {
+        setStages(JSON.parse(saved));
+        setView("roadmap");
+      }
+    } catch {}
+  }, []);
+
   const setStageStatus = (stageId: string, status: StageStatus) => {
     setStages((prev) =>
       prev.map((s) => (s.id === stageId ? { ...s, status } : s))
@@ -87,6 +98,7 @@ export default function AIRoadmapPage() {
       }
       const mapped = (data.stages ?? []).map(mapApiStageToRoadmapStage);
       setStages(mapped);
+      try { sessionStorage.setItem("roadmap-stages", JSON.stringify(mapped)); } catch {}
       setView("roadmap");
     } catch {
       setError("Network error. Please try again.");
@@ -95,6 +107,7 @@ export default function AIRoadmapPage() {
   };
 
   const startOver = () => {
+    try { sessionStorage.removeItem("roadmap-stages"); } catch {}
     setView("questions");
     setAnswers(initialAnswers);
     setStages([]);

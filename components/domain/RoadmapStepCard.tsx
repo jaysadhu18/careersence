@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { RoadmapStage, StageStatus } from "@/lib/hooks/useRoadmap";
 
 interface RoadmapStepCardProps {
@@ -62,8 +63,25 @@ export function RoadmapStepCard({
   onStatusChange,
 }: RoadmapStepCardProps) {
   const [expanded, setExpanded] = useState(stage.status === "in_progress");
+  const [resources, setResources] = useState<any[]>([]);
+  const [resLoading, setResLoading] = useState(false);
+  const [resFetched, setResFetched] = useState(false);
   const status = statusConfig[stage.status];
   const Icon = stepIcons[stepIndex % stepIcons.length];
+
+  const toggleExpand = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !resFetched) {
+      setResLoading(true);
+      setResFetched(true);
+      fetch("/api/courses/search?q=" + encodeURIComponent(stage.title))
+        .then((r) => r.json())
+        .then((d) => setResources((d.courses || []).slice(0, 2)))
+        .catch(() => {})
+        .finally(() => setResLoading(false));
+    }
+  };
 
   return (
     <div
@@ -102,7 +120,7 @@ export function RoadmapStepCard({
 
       <button
         type="button"
-        onClick={() => setExpanded(!expanded)}
+        onClick={toggleExpand}
         className="mt-4 flex items-center gap-2 text-sm font-medium text-[var(--color-primary-600)] transition-colors hover:text-[var(--color-primary-700)]"
       >
         {expanded ? "Hide" : "Show"} action items
@@ -117,6 +135,7 @@ export function RoadmapStepCard({
       </button>
 
       {expanded && (
+        <>
         <ul className="mt-4 space-y-2">
           {stage.actions.map((action, i) => (
             <li
@@ -130,6 +149,36 @@ export function RoadmapStepCard({
             </li>
           ))}
         </ul>
+
+        {/* Resources */}
+        <div className="mt-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-400)] mb-2">Suggested Resources</p>
+          {resLoading ? (
+            <p className="text-xs text-[var(--color-text-muted)]">Finding resources...</p>
+          ) : resources.length === 0 ? null : (
+            <>
+              <div className="flex flex-col gap-2">
+                {resources.map((r) => (
+                  <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer"
+                    className="group flex items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 hover:border-[var(--color-primary-400)]/60 transition-colors">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[var(--color-text)] line-clamp-1 group-hover:text-[var(--color-primary-500)] transition-colors">{r.title}</p>
+                      <p className="text-[10px] text-[var(--color-text-muted)]">{r.source} · {r.type}</p>
+                    </div>
+                    <svg className="h-3.5 w-3.5 shrink-0 text-[var(--color-primary-500)] group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+              <Link href={"/learning-resources?q=" + encodeURIComponent(stage.title)}
+                className="mt-2 flex items-center gap-1 text-[10px] font-bold text-[var(--color-primary-500)] hover:underline">
+                Show more →
+              </Link>
+            </>
+          )}
+        </div>
+        </>
       )}
 
       {onStatusChange && (

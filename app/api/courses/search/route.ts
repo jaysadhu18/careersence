@@ -31,10 +31,12 @@ export async function GET(req: NextRequest) {
 
         // 1. Fetch internal approved resources
         try {
+            const excludeUserId = searchParams.get("excludeUserId");
             // @ts-ignore
             const dbResources = await prisma.internalResource.findMany({
                 where: {
                     status: "approved",
+                    ...(excludeUserId ? { submittedById: { not: excludeUserId } } : {}),
                     OR: [
                         { title: { contains: q, mode: "insensitive" } },
                         { description: { contains: q, mode: "insensitive" } },
