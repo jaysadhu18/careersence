@@ -29,40 +29,36 @@ export async function GET(req: NextRequest) {
         let ytCourses: any[] = [];
         let devArticles: any[] = [];
 
-        // 1. Fetch internal approved resources
+        // 1. Fetch native published courses
         try {
             const excludeUserId = searchParams.get("excludeUserId");
-            // @ts-ignore
-            const dbResources = await prisma.internalResource.findMany({
+            const dbCourses = await prisma.course.findMany({
                 where: {
-                    status: "approved",
-                    ...(excludeUserId ? { submittedById: { not: excludeUserId } } : {}),
+                    status: "PUBLISHED",
+                    ...(excludeUserId ? { authorId: { not: excludeUserId } } : {}),
                     OR: [
                         { title: { contains: q, mode: "insensitive" } },
                         { description: { contains: q, mode: "insensitive" } },
-                        { courseTitle: { contains: q, mode: "insensitive" } },
                     ]
-                } as any,
+                },
                 include: {
-                    submittedBy: {
-                        select: { name: true, organizationName: true }
-                    }
+                    author: { select: { name: true, organizationName: true } },
+                    sections: { include: { lectures: true } }
                 }
             });
 
-            // @ts-ignore
-            internalResources = dbResources.map((r: any) => ({
-                id: `internal-${r.id}`,
-                title: r.title || r.courseTitle,
-                description: r.description || r.courseDescription || r.summary,
-                type: r.resourceType,
-                level: r.level || "All Levels",
-                durationMinutes: (r.durationSeconds ? Math.round(r.durationSeconds / 60) : r.readTimeMinutes) || r.totalDuration || 0,
-                source: r.submittedBy.organizationName || r.submittedBy.name || "Provider",
-                url: r.videoFilePath || "#", // Placeholder until player modal added
+            internalResources = dbCourses.map((c: any) => ({
+                id: c.id, // Direct ID ensures Next.js router handles the page correctly
+                title: c.title,
+                description: c.description || "Interactive dynamic course",
+                type: "course",
+                level: "All Levels", 
+                durationMinutes: c.sections?.reduce((acc: number, s: any) => acc + (s.lectures?.length || 0) * 10, 0) || 15,
+                source: c.author.organizationName || c.author.name || "Instructor",
+                url: `/courses/${c.id}`, // Native course player path!
             }));
         } catch (dbError) {
-            console.error("Failed to fetch internal resources:", dbError);
+            console.error("Failed to fetch internal courses:", dbError);
         }
 
         // 2. Fetch from YouTube
