@@ -233,7 +233,7 @@ export default function CollegeFinderPage() {
           {loading && (
             <Card padding="lg">
               <div className="flex flex-col items-center justify-center gap-3 py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-primary-200)] border-t-[var(--color-primary-600)]" />
+                <img src="/logo.png" alt="logo" className="h-16 w-16 object-contain animate-bounce" />
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Searching colleges in {state} for {degreeType} in {field}...
                 </p>

@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isAuthorized === null) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--color-background)]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-primary-600)] border-t-transparent"></div>
+        <img src="/logo.png" alt="logo" className="h-16 w-16 object-contain animate-bounce" />
       </div>
     );
   }

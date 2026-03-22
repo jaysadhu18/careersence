@@ -46,14 +46,14 @@ export default function CareerQuizPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center justify-center py-20"
         >
-          {/* Spinner */}
-          <div className="relative mb-6">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-              className="h-16 w-16 rounded-full border-4 border-[var(--color-primary-200)] border-t-[var(--color-primary-600)]"
-            />
-          </div>
+          {/* Logo */}
+          <motion.img
+            src="/logo.png"
+            alt="logo"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            className="mb-6 h-20 w-20 object-contain"
+          />
           <h2 className="text-xl font-semibold text-[var(--color-text)]">
             {phase === "loading-phase2"
               ? "Generating personalised questions…"

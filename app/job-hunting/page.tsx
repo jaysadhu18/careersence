@@ -1003,7 +1003,7 @@ export default function JobHuntingPage() {
 
           {discovering && (
             <div className="py-16 text-center text-[var(--color-text-muted)]">
-              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-primary-200)] border-t-[var(--color-primary-600)]" />
+              <img src="/logo.png" alt="logo" className="mx-auto mb-4 h-16 w-16 object-contain animate-bounce" />
               Fetching live jobs…
             </div>
           )}

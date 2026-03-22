@@ -248,7 +248,6 @@ export default function AnalyzePage() {
       <Tabs value={activeTab} onChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="resume">Resume analysis</TabsTrigger>
-          <TabsTrigger value="job">Job description analysis</TabsTrigger>
           <TabsTrigger value="career">Career comparison</TabsTrigger>
         </TabsList>
 
@@ -364,39 +363,6 @@ export default function AnalyzePage() {
           )}
         </TabsContent>
 
-        <TabsContent value="job">
-          <Card padding="lg" className="mb-6">
-            <h3 className="mb-2 font-semibold text-[var(--color-text-strong)]">
-              Paste the job description
-            </h3>
-            <Textarea
-              placeholder="Paste the full job description to get tailored resume and cover letter suggestions."
-              value={jobText}
-              onChange={(e) => setJobText(e.target.value)}
-              rows={8}
-              className="mb-4"
-            />
-            <Button
-              variant="primary"
-              loading={loading}
-              onClick={() => runAnalysis("job")}
-              disabled={!jobText.trim()}
-            >
-              Run analysis
-            </Button>
-          </Card>
-          {result === "job" && (
-            <Card padding="lg">
-              <h3 className="mb-4 font-semibold text-[var(--color-text-strong)]">
-                Analysis results
-              </h3>
-              <Section title="Strengths" items={mockAnalysis.job.strengths} variant="success" />
-              <Section title="Gaps" items={mockAnalysis.job.weaknesses} variant="warning" />
-              <Section title="Suggestions" items={mockAnalysis.job.suggestions} />
-              <Section title="Action items" items={mockAnalysis.job.actionItems} variant="primary" />
-            </Card>
-          )}
-        </TabsContent>
 
         <TabsContent value="career">
           <Modal

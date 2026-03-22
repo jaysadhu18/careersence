@@ -134,7 +134,7 @@ export default function ProfilePage() {
       <PageShell title="My Profile" maxWidth="xl">
         <Card padding="lg">
           <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-primary-200)] border-t-[var(--color-primary-600)]" />
+            <img src="/logo.png" alt="logo" className="h-16 w-16 object-contain animate-bounce" />
           </div>
         </Card>
       </PageShell>
