@@ -27,6 +27,7 @@ model User {
   savedResources    SavedResource[]
   internalResources InternalResource[]
   organizationName  String? // For institute/university Resource Providers
+  jobApplications   JobApplication[]
 
   // New Curriculum Builder Relations
   authoredCourses   Course[]     @relation("CourseAuthor")
@@ -53,9 +54,10 @@ model SavedJob {
   location  String
   url       String
   source    String   @default("jsearch")
-  status    String   @default("saved") // saved | applied | interviewing | offer | rejected
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status         String          @default("saved") // saved | applied | interviewing | offer | rejected
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  jobApplication JobApplication?
 
   @@unique([userId, jobId])
 }
@@ -204,4 +206,22 @@ model Progress {
   lecture    Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   
   @@unique([studentId, lectureId])
+}
+
+model JobApplication {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedJobId          String   @unique
+  savedJob            SavedJob @relation(fields: [savedJobId], references: [id], onDelete: Cascade)
+  
+  // AI Tailored Docs
+  tailoredCoverLetter String?  @db.Text
+  tailoredResume      String?  @db.Text // Store the tailored resume structure (as JSON text)
+  fitScore            Int?
+  fitAnalysis         String?  @db.Text // Why it fits / Deal-breakers warning
+  screeningAnswers    String?  @db.Text // JSON: array of screening questions & answers
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
