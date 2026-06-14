@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -1153,6 +1154,12 @@ export default function JobHuntingPage() {
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
+                  <Link
+                    href={`/job-hunting/tailor/${job.id}`}
+                    className="inline-flex items-center justify-center rounded-lg bg-[var(--color-secondary-600)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-secondary-700)]"
+                  >
+                    AI Tailor
+                  </Link>
                   <a
                     href={job.url}
                     target="_blank"
